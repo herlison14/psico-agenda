@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Psico Agenda
 
-## Getting Started
+Sistema de gestão de agenda e recibos para psicólogos. MVP completo com agenda semanal, cadastro de pacientes, geração de recibo PDF e exportação para Carnê-Leão.
 
-First, run the development server:
+## Stack
+
+- Next.js 14 + TypeScript + Tailwind CSS
+- Supabase (banco de dados + autenticação)
+- jsPDF (geração de recibo em PDF)
+- date-fns com locale pt-BR
+
+## Setup
+
+### 1. Criar projeto no Supabase
+
+Acesse [supabase.com](https://supabase.com) e crie um novo projeto.
+
+### 2. Executar o schema SQL
+
+No painel do Supabase, acesse **SQL Editor** e execute o conteúdo do arquivo `SUPABASE_SCHEMA.sql`.
+
+### 3. Configurar variáveis de ambiente
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Preencha `.env.local` com os valores do seu projeto Supabase (Settings -> API):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Rodar localmente
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Acesse: http://localhost:3000
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5. Deploy no Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Faça push do projeto para um repositório GitHub
+2. Acesse [vercel.com](https://vercel.com) e importe o repositório
+3. Adicione as variáveis de ambiente (`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+4. Deploy!
 
-## Deploy on Vercel
+## Funcionalidades
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Login** — cadastro e login com email/senha via Supabase Auth
+- **Perfil** — dados do psicólogo usados nos recibos (nome, CRP, CPF, endereço)
+- **Pacientes** — CRUD completo com busca
+- **Agenda** — visualização semanal, agendamento, marcar realizado/cancelado
+- **Recibos** — geração de PDF profissional com valor por extenso
+- **Financeiro** — resumo mensal e exportação CSV para Carnê-Leão
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Carnê-Leão
+
+O CSV exportado pela página Financeiro contém as colunas:
+`Data, Nome do Paciente, CPF do Paciente, Valor, Descricao`
+
+Formato compatível para declaração de rendimentos de autônomo no Carnê-Leão.
