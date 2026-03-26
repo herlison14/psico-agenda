@@ -5,7 +5,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-full">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="p-6 lg:p-8 pt-16 lg:pt-8">
+        <div className="p-6 lg:p-8 pt-16 lg:pt-8 min-h-full bg-[#F7F5F0]">
           {children}
         </div>
       </main>

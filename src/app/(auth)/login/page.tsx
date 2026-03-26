@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { Brain, Loader2 } from 'lucide-react'
+import { Leaf, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -42,72 +42,126 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
+    <div className="min-h-screen flex">
+      {/* Painel esquerdo — visual/branding */}
+      <div className="hidden lg:flex flex-col justify-between w-2/5 bg-[#1B3A2F] px-12 py-16">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-indigo-600 rounded-xl p-3 mb-3">
-            <Brain className="w-8 h-8 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="bg-[#5A9E7C] rounded-xl p-2">
+            <Leaf className="w-5 h-5 text-white" strokeWidth={1.5} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Psico Agenda</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestão de agenda para psicólogos</p>
+          <span className="text-white font-semibold text-lg tracking-wide">Psico Agenda</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="seu@email.com"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              required
-              placeholder="••••••••"
-              minLength={6}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-            />
-          </div>
+        {/* Citação central */}
+        <div>
+          <blockquote className="text-[#A8D5BC] text-2xl font-light leading-relaxed mb-6" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
+            &ldquo;Cuidar de quem cuida começa com organização e clareza.&rdquo;
+          </blockquote>
+          <ul className="space-y-3">
+            {[
+              'Agenda inteligente de sessões',
+              'Recibos digitais em segundos',
+              'Gestão financeira e Carnê-Leão',
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-2.5 text-[#A8D5BC] text-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#5A9E7C] shrink-0" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          {erro && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2.5 rounded-lg text-sm">
-              {erro}
-            </div>
-          )}
-          {mensagem && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2.5 rounded-lg text-sm">
-              {mensagem}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-          >
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {modo === 'login' ? 'Entrar' : 'Criar conta'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          {modo === 'login' ? 'Não tem conta? ' : 'Já tem conta? '}
-          <button
-            onClick={() => { setModo(modo === 'login' ? 'cadastro' : 'login'); setErro(''); setMensagem('') }}
-            className="text-indigo-600 font-medium hover:underline"
-          >
-            {modo === 'login' ? 'Cadastrar-se' : 'Fazer login'}
-          </button>
+        {/* Rodapé */}
+        <p className="text-[#5A9E7C] text-xs">
+          Desenvolvido para psicólogos brasileiros
         </p>
+      </div>
+
+      {/* Painel direito — formulário */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-[#F7F5F0]">
+        <div className="w-full max-w-sm">
+          {/* Logo mobile */}
+          <div className="flex items-center gap-3 mb-10 lg:hidden">
+            <div className="bg-[#1B3A2F] rounded-xl p-2">
+              <Leaf className="w-5 h-5 text-[#5A9E7C]" strokeWidth={1.5} />
+            </div>
+            <span className="text-[#1C2B22] font-semibold text-lg">Psico Agenda</span>
+          </div>
+
+          <h1 className="text-2xl font-semibold text-[#1C2B22] mb-1" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
+            {modo === 'login' ? 'Bem-vindo de volta' : 'Criar sua conta'}
+          </h1>
+          <p className="text-[#7A8C82] text-sm mb-8">
+            {modo === 'login'
+              ? 'Entre para acessar sua agenda'
+              : 'Comece a organizar seus atendimentos'}
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-[#3D5247] mb-1.5">
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="seu@email.com"
+                className="w-full px-4 py-3 bg-white border border-[#D4CFC6] rounded-xl focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#3D5247] mb-1.5">
+                Senha
+              </label>
+              <input
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                placeholder="••••••••"
+                minLength={6}
+                className="w-full px-4 py-3 bg-white border border-[#D4CFC6] rounded-xl focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] transition-all"
+              />
+            </div>
+
+            {erro && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {erro}
+              </div>
+            )}
+            {mensagem && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
+                {mensagem}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#1B3A2F] text-white py-3 rounded-xl font-medium hover:bg-[#244D3F] active:scale-[0.98] transition-all duration-150 disabled:opacity-60 flex items-center justify-center gap-2 text-sm mt-2"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {modo === 'login' ? 'Entrar' : 'Criar conta'}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-[#7A8C82] mt-6">
+            {modo === 'login' ? 'Não tem conta? ' : 'Já tem conta? '}
+            <button
+              onClick={() => {
+                setModo(modo === 'login' ? 'cadastro' : 'login')
+                setErro('')
+                setMensagem('')
+              }}
+              className="text-[#2D6A52] font-medium hover:underline"
+            >
+              {modo === 'login' ? 'Cadastrar-se' : 'Fazer login'}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   )

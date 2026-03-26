@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Lora } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const lora = Lora({ subsets: ['latin'], variable: '--font-lora' })
 
 export const metadata: Metadata = {
   title: 'Psico Agenda',
@@ -15,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className="h-full">
-      <body className={`${inter.className} h-full bg-gray-50 text-gray-900`}>
+    <html lang="pt-BR" className={`h-full ${inter.variable} ${lora.variable}`}>
+      <body className={`${inter.className} h-full bg-[#F7F5F0] text-[#1C2B22]`}>
         {children}
       </body>
     </html>
