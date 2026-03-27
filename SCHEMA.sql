@@ -36,8 +36,9 @@ CREATE TABLE IF NOT EXISTS sessoes (
   data_hora TIMESTAMPTZ NOT NULL,
   duracao_min INT DEFAULT 50,
   valor NUMERIC(10,2) NOT NULL,
-  status TEXT DEFAULT 'agendado' CHECK (status IN ('agendado','realizado','cancelado')),
+  status TEXT DEFAULT 'agendado' CHECK (status IN ('agendado','realizado','cancelado','faltou')),
   observacoes TEXT,
+  notas_clinicas TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
