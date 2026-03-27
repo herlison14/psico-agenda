@@ -1,16 +1,20 @@
-import { auth } from '@/auth'
-import { NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+import { NextRequest, NextResponse } from 'next/server'
 
-export default auth((req) => {
-  const { nextUrl, auth: session } = req
-  const isLoggedIn = !!session?.user
-  const isAuthPage = nextUrl.pathname.startsWith('/login')
-  const isApiAuth = nextUrl.pathname.startsWith('/api/auth')
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
 
-  if (isAuthPage || isApiAuth) return NextResponse.next()
-  if (!isLoggedIn) return NextResponse.redirect(new URL('/login', nextUrl))
+  if (pathname.startsWith('/login') || pathname.startsWith('/api/auth')) {
+    return NextResponse.next()
+  }
+
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', req.url))
+  }
+
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [
