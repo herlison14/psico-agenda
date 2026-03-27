@@ -4,6 +4,7 @@ import { compare } from 'bcryptjs'
 import pool from '@/lib/db'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   session: { strategy: 'jwt' },
   providers: [
     Credentials({
