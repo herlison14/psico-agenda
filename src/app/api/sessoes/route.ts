@@ -10,9 +10,11 @@ export async function GET(req: NextRequest) {
     const fim = searchParams.get('fim')
     const mes = searchParams.get('mes')
     const status = searchParams.get('status')
+    const paciente_id = searchParams.get('paciente_id')
 
     let result = [...DEMO_SESSOES]
 
+    if (paciente_id) result = result.filter(s => s.paciente_id === paciente_id)
     if (inicio) result = result.filter(s => s.data_hora >= inicio)
     if (fim) result = result.filter(s => s.data_hora < fim)
     if (mes) {
@@ -37,6 +39,7 @@ export async function GET(req: NextRequest) {
   const fim = searchParams.get('fim')
   const mes = searchParams.get('mes')
   const status = searchParams.get('status')
+  const paciente_id = searchParams.get('paciente_id')
 
   let query = `
     SELECT s.*, row_to_json(p.*) as paciente
@@ -47,6 +50,7 @@ export async function GET(req: NextRequest) {
   const values: (string | null)[] = [session.user.id]
   let idx = 2
 
+  if (paciente_id) { query += ` AND s.paciente_id = $${idx++}`; values.push(paciente_id) }
   if (inicio) { query += ` AND s.data_hora >= $${idx++}`; values.push(inicio) }
   if (fim) { query += ` AND s.data_hora < $${idx++}`; values.push(fim) }
   if (mes) {

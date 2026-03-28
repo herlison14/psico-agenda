@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Paciente } from '@/types/psico'
-import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus } from 'lucide-react'
+import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus, BookOpen } from 'lucide-react'
 
 function maskCPF(v: string) {
   return v.replace(/\D/g, '').slice(0, 11)
@@ -24,6 +25,7 @@ const EMPTY: Partial<Paciente> = {
 
 export default function PacientesPage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
@@ -163,12 +165,22 @@ export default function PacientesPage() {
                       </button>
                     </td>
                     <td className="px-5 py-4">
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="p-1.5 hover:bg-[#EBF5EF] rounded-lg text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" strokeWidth={1.75} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => router.push(`/pacientes/${p.id}`)}
+                          className="p-1.5 hover:bg-[#EBF5EF] rounded-lg text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
+                          title="Histórico clínico"
+                        >
+                          <BookOpen className="w-4 h-4" strokeWidth={1.75} />
+                        </button>
+                        <button
+                          onClick={() => openEdit(p)}
+                          className="p-1.5 hover:bg-[#EBF5EF] rounded-lg text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
+                          title="Editar paciente"
+                        >
+                          <Edit2 className="w-4 h-4" strokeWidth={1.75} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

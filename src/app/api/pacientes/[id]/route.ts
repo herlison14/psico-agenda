@@ -3,6 +3,26 @@ import pool from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { isDemoMode, DEMO_PACIENTES } from '@/lib/mockData'
 
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  if (isDemoMode()) {
+    const paciente = DEMO_PACIENTES.find(p => p.id === id)
+    if (!paciente) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json(paciente)
+  }
+
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { rows } = await pool.query(
+    'SELECT * FROM pacientes WHERE id=$1 AND psicologo_id=$2',
+    [id, session.user.id]
+  )
+  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json(rows[0])
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
