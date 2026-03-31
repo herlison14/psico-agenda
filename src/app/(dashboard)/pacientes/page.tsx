@@ -57,15 +57,20 @@ export default function PacientesPage() {
     setSaving(true)
     setErro('')
 
-    const res = editId
-      ? await fetch(`/api/pacientes/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      : await fetch('/api/pacientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+    try {
+      const res = editId
+        ? await fetch(`/api/pacientes/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        : await fetch('/api/pacientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
 
-    const data = await res.json()
-    setSaving(false)
-    if (!res.ok) { setErro(data.error ?? 'Erro ao salvar.'); return }
-    setModalOpen(false)
-    loadPacientes()
+      const data = await res.json()
+      if (!res.ok) { setErro(data.error ?? 'Erro ao salvar.'); return }
+      setModalOpen(false)
+      loadPacientes()
+    } catch {
+      setErro('Erro de conexão. Tente novamente.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function toggleAtivo(p: Paciente) {

@@ -77,27 +77,32 @@ export default function AgendaPage() {
     setSaving(true)
     setErro('')
 
-    const [hh, mm] = form.hora.split(':').map(Number)
-    const data_hora = setMinutes(setHours(parseISO(form.data), hh), mm).toISOString()
+    try {
+      const [hh, mm] = form.hora.split(':').map(Number)
+      const data_hora = setMinutes(setHours(parseISO(form.data), hh), mm).toISOString()
 
-    const res = await fetch('/api/sessoes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paciente_id: form.paciente_id,
-        data_hora,
-        duracao_min: form.duracao_min,
-        valor: form.valor,
-        observacoes: form.observacoes || null,
-        status: form.status,
-      }),
-    })
+      const res = await fetch('/api/sessoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: form.paciente_id,
+          data_hora,
+          duracao_min: form.duracao_min,
+          valor: form.valor,
+          observacoes: form.observacoes || null,
+          status: form.status,
+        }),
+      })
 
-    setSaving(false)
-    if (!res.ok) { const d = await res.json(); setErro(d.error ?? 'Erro ao salvar.'); return }
-    setModalNova(false)
-    setForm(EMPTY_FORM)
-    loadSessoes()
+      if (!res.ok) { const d = await res.json(); setErro(d.error ?? 'Erro ao salvar.'); return }
+      setModalNova(false)
+      setForm(EMPTY_FORM)
+      loadSessoes()
+    } catch {
+      setErro('Erro de conexão. Tente novamente.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function marcarRealizado(sessao: Sessao) {
