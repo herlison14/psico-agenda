@@ -62,8 +62,15 @@ export default function PacientesPage() {
         ? await fetch(`/api/pacientes/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
         : await fetch('/api/pacientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
 
-      const data = await res.json()
-      if (!res.ok) { setErro(data.error ?? 'Erro ao salvar.'); return }
+      if (!res.ok) {
+        let errorMsg = 'Erro ao salvar.'
+        try {
+          const data = await res.json()
+          errorMsg = data.error ?? errorMsg
+        } catch { /* resposta não é JSON */ }
+        setErro(errorMsg)
+        return
+      }
       setModalOpen(false)
       loadPacientes()
     } catch {

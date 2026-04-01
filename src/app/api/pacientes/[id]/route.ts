@@ -15,12 +15,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { rows } = await pool.query(
-    'SELECT * FROM pacientes WHERE id=$1 AND psicologo_id=$2',
-    [id, session.user.id]
-  )
-  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(rows[0])
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM pacientes WHERE id=$1 AND psicologo_id=$2',
+      [id, session.user.id]
+    )
+    if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json(rows[0])
+  } catch (err) {
+    console.error('[GET /api/pacientes/[id]]', err)
+    return NextResponse.json({ error: 'Erro ao consultar paciente.' }, { status: 500 })
+  }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -37,14 +42,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { nome, cpf, email, telefone, valor_sessao, ativo } = body
 
-  const { rows } = await pool.query(
-    `UPDATE pacientes
-     SET nome=$1, cpf=$2, email=$3, telefone=$4, valor_sessao=$5, ativo=$6
-     WHERE id=$7 AND psicologo_id=$8
-     RETURNING *`,
-    [nome, cpf || null, email || null, telefone || null, valor_sessao, ativo, id, session.user.id]
-  )
-
-  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(rows[0])
+  try {
+    const { rows } = await pool.query(
+      `UPDATE pacientes
+       SET nome=$1, cpf=$2, email=$3, telefone=$4, valor_sessao=$5, ativo=$6
+       WHERE id=$7 AND psicologo_id=$8
+       RETURNING *`,
+      [nome, cpf || null, email || null, telefone || null, valor_sessao, ativo, id, session.user.id]
+    )
+    if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json(rows[0])
+  } catch (err) {
+    console.error('[PUT /api/pacientes/[id]]', err)
+    return NextResponse.json({ error: 'Erro ao atualizar paciente.' }, { status: 500 })
+  }
 }

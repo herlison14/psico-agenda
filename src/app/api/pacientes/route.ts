@@ -9,12 +9,16 @@ export async function GET() {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { rows } = await pool.query(
-    'SELECT * FROM pacientes WHERE psicologo_id = $1 ORDER BY nome',
-    [session.user.id]
-  )
-
-  return NextResponse.json(rows)
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM pacientes WHERE psicologo_id = $1 ORDER BY nome',
+      [session.user.id]
+    )
+    return NextResponse.json(rows)
+  } catch (err) {
+    console.error('[GET /api/pacientes]', err)
+    return NextResponse.json({ error: 'Erro ao consultar pacientes.' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -29,12 +33,16 @@ export async function POST(req: NextRequest) {
   const { nome, cpf, email, telefone, valor_sessao } = await req.json()
   if (!nome?.trim()) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })
 
-  const { rows } = await pool.query(
-    `INSERT INTO pacientes (psicologo_id, nome, cpf, email, telefone, valor_sessao)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING *`,
-    [session.user.id, nome, cpf || null, email || null, telefone || null, valor_sessao ?? 150]
-  )
-
-  return NextResponse.json(rows[0], { status: 201 })
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO pacientes (psicologo_id, nome, cpf, email, telefone, valor_sessao)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [session.user.id, nome, cpf || null, email || null, telefone || null, valor_sessao ?? 150]
+    )
+    return NextResponse.json(rows[0], { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/pacientes]', err)
+    return NextResponse.json({ error: 'Erro ao cadastrar paciente.' }, { status: 500 })
+  }
 }
