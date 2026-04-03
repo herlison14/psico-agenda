@@ -11,6 +11,7 @@ load_dotenv()
 
 from agent import processar
 from waha import enviar_resposta_humanizada, enviar_texto
+from telegram import enviar_mensagem, enviar_digitando, registrar_webhook
 
 PSICO_API_URL = os.getenv("PSICO_API_URL", "")
 AGENTE_API_KEY = os.getenv("AGENTE_API_KEY", "")
@@ -140,7 +141,7 @@ def adicionar_ao_buffer(phone: str, nome: str, mensagem: dict):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("✅ Agente July iniciado (WAHA)")
+    print("✅ Agente July iniciado (WAHA + Telegram)")
     yield
 
 
@@ -203,6 +204,86 @@ async def webhook(request: Request):
             adicionar_ao_buffer(phone, nome, {"type": "other", "content": "[arquivo recebido]"})
 
     return Response(status_code=200)
+
+
+@app.post("/webhook/telegram")
+async def webhook_telegram(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return Response(status_code=400)
+
+    message = body.get("message") or body.get("edited_message")
+    if not message:
+        return Response(status_code=200)
+
+    chat_id = message.get("chat", {}).get("id")
+    text = message.get("text", "")
+    from_user = message.get("from", {})
+    nome = from_user.get("first_name", "Paciente")
+    phone = f"tg_{chat_id}"  # identificador único por chat
+
+    if not chat_id or not text or text.startswith("/"):
+        if text == "/start":
+            await enviar_mensagem(chat_id, "Olá! Sou a *July*, assistente virtual da clínica de psicologia. Como posso ajudar?")
+        return Response(status_code=200)
+
+    if not agente_ativo(phone):
+        return Response(status_code=200)
+
+    adicionar_ao_buffer_telegram(chat_id, phone, nome, text)
+    return Response(status_code=200)
+
+
+def adicionar_ao_buffer_telegram(chat_id: int, phone: str, nome: str, texto: str):
+    if phone not in _buffers:
+        _buffers[phone] = []
+    _buffers[phone].append({"type": "text", "content": texto})
+
+    tarefa = _buffer_tasks.get(phone)
+    if tarefa is None or tarefa.done():
+        _buffer_tasks[phone] = asyncio.create_task(
+            _processar_buffer_telegram(chat_id, phone, nome)
+        )
+
+
+async def _processar_buffer_telegram(chat_id: int, phone: str, nome: str):
+    await asyncio.sleep(BUFFER_DELAY)
+
+    mensagens = _buffers.pop(phone, [])
+    if not mensagens or not agente_ativo(phone):
+        return
+
+    partes = [f"[{m['type'].upper()}]: {m['content']}" for m in mensagens]
+    texto_consolidado = "\n".join(partes)
+
+    try:
+        await enviar_digitando(chat_id)
+
+        paciente = await obter_paciente(phone, nome)
+        paciente_id = paciente["id"] if paciente else None
+        paciente_nome = paciente["nome"] if paciente else nome
+
+        resposta = await processar(
+            phone=phone,
+            paciente_id=paciente_id,
+            paciente_nome=paciente_nome,
+            mensagens_usuario=texto_consolidado,
+            disable_agent_fn=_disable_agent_fn,
+        )
+
+        await enviar_mensagem(chat_id, resposta)
+
+    except Exception as e:
+        print(f"[ERRO Telegram] {phone}: {e}")
+        await enviar_mensagem(chat_id, "Desculpe, ocorreu um erro. Tente novamente em instantes.")
+
+
+@app.get("/setup/telegram")
+async def setup_telegram(request: Request):
+    base_url = str(request.base_url).rstrip("/")
+    result = await registrar_webhook(base_url)
+    return result
 
 
 if __name__ == "__main__":
