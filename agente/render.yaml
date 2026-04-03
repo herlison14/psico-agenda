@@ -24,3 +24,5 @@ services:
         sync: false
       - key: BUFFER_DELAY
         value: "3"
+      - key: TELEGRAM_TOKEN
+        sync: false
