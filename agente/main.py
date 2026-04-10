@@ -116,7 +116,7 @@ async def _processar_buffer(phone: str, nome: str):
             phone=phone,
             paciente_id=paciente_id,
             paciente_nome=paciente_nome,
-            mensagens_usuario=texto_consolidado,
+            mensagem_usuario=texto_consolidado,
             disable_agent_fn=_disable_agent_fn,
         )
 
@@ -268,7 +268,7 @@ async def _processar_buffer_telegram(chat_id: int, phone: str, nome: str):
             phone=phone,
             paciente_id=paciente_id,
             paciente_nome=paciente_nome,
-            mensagens_usuario=texto_consolidado,
+            mensagem_usuario=texto_consolidado,
             disable_agent_fn=_disable_agent_fn,
         )
 
@@ -276,9 +276,8 @@ async def _processar_buffer_telegram(chat_id: int, phone: str, nome: str):
 
     except Exception as e:
         import traceback
-        print(f"[ERRO Telegram] {phone}: {e}")
-        print(traceback.format_exc())
-        await enviar_mensagem(chat_id, f"Erro interno: {str(e)[:200]}")
+        print(f"[ERRO Telegram] {phone}: {e}\n{traceback.format_exc()}")
+        await enviar_mensagem(chat_id, "Desculpe, ocorreu um erro interno. Tente novamente em instantes.")
 
 
 @app.get("/setup/telegram")
