@@ -123,7 +123,7 @@ async def _processar_buffer(phone: str, nome: str):
         await enviar_resposta_humanizada(phone, resposta)
 
     except Exception as e:
-        print(f"[ERRO] Processamento {phone}: {e}")
+        print(f"[ERRO] Processamento falhou: {e}")
         await enviar_texto(phone, "Desculpe, ocorreu um erro. Tente novamente em instantes.")
 
 
@@ -145,7 +145,15 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Agente July — Psico-agenda", lifespan=lifespan)
+_ENV = os.getenv("ENV", "development")
+
+app = FastAPI(
+    title="Agente July — PsiPlanner",
+    lifespan=lifespan,
+    docs_url="/docs" if _ENV != "production" else None,
+    redoc_url="/redoc" if _ENV != "production" else None,
+    openapi_url="/openapi.json" if _ENV != "production" else None,
+)
 
 
 @app.get("/health")
@@ -170,7 +178,13 @@ async def webhook(request: Request):
         return Response(status_code=200)
 
     # Extrai telefone no formato limpo (sem @c.us)
-    phone = payload.get("from", "").replace("@c.us", "").replace("@s.whatsapp.net", "")
+    from_jid = payload.get("from", "")
+
+    # Ignorar grupos e broadcasts
+    if "@g.us" in from_jid or "@status.broadcast" in from_jid or "@newsletter" in from_jid:
+        return Response(status_code=200)
+
+    phone = from_jid.replace("@c.us", "").replace("@s.whatsapp.net", "")
     nome = body.get("me", {}).get("pushName") or payload.get("pushName") or "Paciente"
 
     if not phone:
@@ -206,8 +220,17 @@ async def webhook(request: Request):
     return Response(status_code=200)
 
 
+TELEGRAM_SECRET_TOKEN = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+
+
 @app.post("/webhook/telegram")
 async def webhook_telegram(request: Request):
+    # Valida secret token do Telegram para evitar spoofing
+    if TELEGRAM_SECRET_TOKEN:
+        token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        if token_header != TELEGRAM_SECRET_TOKEN:
+            return Response(status_code=403)
+
     try:
         body = await request.json()
     except Exception:
@@ -276,12 +299,17 @@ async def _processar_buffer_telegram(chat_id: int, phone: str, nome: str):
 
     except Exception as e:
         import traceback
-        print(f"[ERRO Telegram] {phone}: {e}\n{traceback.format_exc()}")
+        print(f"[ERRO Telegram] processamento falhou: {e}\n{traceback.format_exc()}")
         await enviar_mensagem(chat_id, "Desculpe, ocorreu um erro interno. Tente novamente em instantes.")
 
 
 @app.get("/setup/telegram")
 async def setup_telegram(request: Request):
+    # Protegido por API key para evitar reconfiguração não autorizada
+    auth = request.headers.get("Authorization", "")
+    admin_key = os.getenv("ADMIN_KEY", "")
+    if not admin_key or auth != f"Bearer {admin_key}":
+        return Response(status_code=403)
     base_url = str(request.base_url).rstrip("/")
     result = await registrar_webhook(base_url)
     return result

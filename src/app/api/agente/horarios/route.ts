@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import pool from '@/lib/db'
-import { verificarAgenteApiKey } from '@/lib/agente-auth'
+import { verificarAgenteApiKey, getPsicologoId } from '@/lib/agente-auth'
 
 // Horários padrão de atendimento (hora cheia)
 const HORARIOS_PADRAO = [8, 9, 10, 11, 14, 15, 16, 17]
 
-// GET /api/agente/horarios?psicologo_id=uuid&dias=7
+// GET /api/agente/horarios?dias=7
 export async function GET(req: NextRequest) {
   if (!verificarAgenteApiKey(req))
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const psicologo_id = getPsicologoId()
   const { searchParams } = req.nextUrl
-  const psicologo_id = searchParams.get('psicologo_id')
-  const dias = Math.min(parseInt(searchParams.get('dias') ?? '7'), 30)
-
-  if (!psicologo_id)
-    return NextResponse.json({ error: 'psicologo_id é obrigatório' }, { status: 400 })
+  const diasRaw = parseInt(searchParams.get('dias') ?? '7')
+  const dias = isNaN(diasRaw) ? 7 : Math.min(Math.max(diasRaw, 1), 30)
 
   // Busca sessões agendadas nos próximos N dias
   const agora = new Date()

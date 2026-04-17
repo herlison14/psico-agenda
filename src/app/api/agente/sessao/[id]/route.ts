@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import pool from '@/lib/db'
-import { verificarAgenteApiKey } from '@/lib/agente-auth'
+import { verificarAgenteApiKey, getPsicologoId } from '@/lib/agente-auth'
 
 // GET /api/agente/sessao/:id — busca próxima sessão agendada do paciente
-// (usado com id = paciente_id quando query param ?tipo=proxima)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!verificarAgenteApiKey(req))
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const psicologo_id = getPsicologoId()
   const { id } = await params
   const tipo = req.nextUrl.searchParams.get('tipo')
-  const psicologo_id = req.nextUrl.searchParams.get('psicologo_id')
 
-  if (tipo === 'proxima' && psicologo_id) {
-    // Busca próxima sessão agendada do paciente
+  if (tipo === 'proxima') {
     const { rows } = await pool.query(
       `SELECT s.*, p.nome as paciente_nome
        FROM sessoes s
@@ -31,8 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ encontrado: true, sessao: rows[0] })
   }
 
-  // Busca sessão por ID
-  const { rows } = await pool.query('SELECT * FROM sessoes WHERE id = $1', [id])
+  const { rows } = await pool.query(
+    'SELECT * FROM sessoes WHERE id = $1 AND psicologo_id = $2',
+    [id, psicologo_id]
+  )
   if (rows.length === 0)
     return NextResponse.json({ error: 'Sessão não encontrada' }, { status: 404 })
 
@@ -44,6 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!verificarAgenteApiKey(req))
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const psicologo_id = getPsicologoId()
   const { id } = await params
   const { status, data_hora, observacoes } = await req.json()
 
@@ -62,10 +63,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (campos.length === 0)
     return NextResponse.json({ error: 'Nenhum campo para atualizar' }, { status: 400 })
 
-  valores.push(id)
+  valores.push(id, psicologo_id)
 
   const { rows } = await pool.query(
-    `UPDATE sessoes SET ${campos.join(', ')} WHERE id = $${idx} RETURNING *`,
+    `UPDATE sessoes SET ${campos.join(', ')} WHERE id = $${idx} AND psicologo_id = $${idx + 1} RETURNING *`,
     valores
   )
 

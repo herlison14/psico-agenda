@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import pool from '@/lib/db'
-import { verificarAgenteApiKey } from '@/lib/agente-auth'
+import { verificarAgenteApiKey, getPsicologoId } from '@/lib/agente-auth'
 
-// GET /api/agente/paciente?phone=5521999999999&psicologo_id=uuid
+// GET /api/agente/paciente?phone=5521999999999
 export async function GET(req: NextRequest) {
   if (!verificarAgenteApiKey(req))
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const psicologo_id = getPsicologoId()
   const { searchParams } = req.nextUrl
   const phone = searchParams.get('phone')
-  const psicologo_id = searchParams.get('psicologo_id')
 
-  if (!phone || !psicologo_id)
+  if (!phone)
     return NextResponse.json({ error: 'phone e psicologo_id são obrigatórios' }, { status: 400 })
 
   // Normaliza o telefone removendo caracteres não numéricos
@@ -37,10 +37,11 @@ export async function POST(req: NextRequest) {
   if (!verificarAgenteApiKey(req))
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { psicologo_id, nome, telefone, email, cpf, valor_sessao } = await req.json()
+  const psicologo_id = getPsicologoId()
+  const { nome, telefone, email, cpf, valor_sessao } = await req.json()
 
-  if (!psicologo_id || !nome?.trim() || !telefone)
-    return NextResponse.json({ error: 'psicologo_id, nome e telefone são obrigatórios' }, { status: 400 })
+  if (!nome?.trim() || !telefone)
+    return NextResponse.json({ error: 'nome e telefone são obrigatórios' }, { status: 400 })
 
   const { rows } = await pool.query(
     `INSERT INTO pacientes (psicologo_id, nome, telefone, email, cpf, valor_sessao)

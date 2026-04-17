@@ -22,9 +22,10 @@ async def enviar_digitando(chat_id: int):
 
 
 async def registrar_webhook(url: str):
+    secret_token = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    payload: dict = {"url": f"{url}/webhook/telegram", "drop_pending_updates": True}
+    if secret_token:
+        payload["secret_token"] = secret_token
     async with httpx.AsyncClient(timeout=10) as client:
-        r = await client.post(
-            f"{TELEGRAM_API}/setWebhook",
-            json={"url": f"{url}/webhook/telegram", "drop_pending_updates": True},
-        )
+        r = await client.post(f"{TELEGRAM_API}/setWebhook", json=payload)
         return r.json()
