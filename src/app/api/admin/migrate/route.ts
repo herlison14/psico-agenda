@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import pool from '@/lib/db'
 
-const ADMIN_KEY = process.env.ADMIN_KEY ?? ''
+const ADMIN_KEY = process.env.AGENTE_API_KEY ?? process.env.ADMIN_KEY ?? ''
 
 // Temporary migration endpoint — remove after first use
 export async function POST(req: NextRequest) {
