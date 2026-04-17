@@ -1,0 +1,72 @@
+databases:
+  - name: psiplanner-db
+    plan: free
+    databaseName: psiplanner
+    user: psiplanner
+    postgresMajorVersion: 16
+
+services:
+  # ── Next.js frontend ──────────────────────────────────────────────────────
+  - type: web
+    name: psiplanner
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: node scripts/migrate.js && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: psiplanner-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: PSICOLOGO_ID
+        sync: false
+      - key: AGENTE_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+
+  # ── FastAPI — agente Sofia ─────────────────────────────────────────────────
+  - type: web
+    name: agente-sofia
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: agente
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: psiplanner-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: WAHA_URL
+        sync: false
+      - key: WAHA_API_KEY
+        sync: false
+      - key: WAHA_SESSION
+        value: "default"
+      - key: PSICO_API_URL
+        sync: false
+      - key: AGENTE_API_KEY
+        sync: false
+      - key: PSICOLOGO_ID
+        sync: false
+      - key: PSICOLOGA_PHONE
+        sync: false
+      - key: BUFFER_DELAY
+        value: "3"
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      - key: ADMIN_KEY
+        sync: false
+      - key: ENV
+        value: "production"
