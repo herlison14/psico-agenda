@@ -314,7 +314,7 @@
         "options": {}
       },
       "id": "19",
-      "name": "Buscar Paciente (Psico-agenda)",
+      "name": "Buscar Paciente (PsiPlanner)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [2720, 300]
@@ -356,7 +356,7 @@
         "options": {}
       },
       "id": "21",
-      "name": "Criar Paciente (Psico-agenda)",
+      "name": "Criar Paciente (PsiPlanner)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [3160, 420]
@@ -634,15 +634,15 @@
         [{ "node": "Buffer Vazio", "type": "main", "index": 0 }]
       ]
     },
-    "Consolidar Mensagens": { "main": [[{ "node": "Buscar Paciente (Psico-agenda)", "type": "main", "index": 0 }]] },
-    "Buscar Paciente (Psico-agenda)": { "main": [[{ "node": "Paciente Existe?", "type": "main", "index": 0 }]] },
+    "Consolidar Mensagens": { "main": [[{ "node": "Buscar Paciente (PsiPlanner)", "type": "main", "index": 0 }]] },
+    "Buscar Paciente (PsiPlanner)": { "main": [[{ "node": "Paciente Existe?", "type": "main", "index": 0 }]] },
     "Paciente Existe?": {
       "main": [
         [{ "node": "Merge Paciente", "type": "main", "index": 0 }],
-        [{ "node": "Criar Paciente (Psico-agenda)", "type": "main", "index": 0 }]
+        [{ "node": "Criar Paciente (PsiPlanner)", "type": "main", "index": 0 }]
       ]
     },
-    "Criar Paciente (Psico-agenda)": { "main": [[{ "node": "Merge Paciente", "type": "main", "index": 1 }]] },
+    "Criar Paciente (PsiPlanner)": { "main": [[{ "node": "Merge Paciente", "type": "main", "index": 1 }]] },
     "Merge Paciente": { "main": [[{ "node": "Agente Sofia (Claude)", "type": "main", "index": 0 }]] },
     "Agente Sofia (Claude)": { "main": [[{ "node": "Humanizar Resposta", "type": "main", "index": 0 }]] },
     "Claude claude-opus-4-6": { "ai_languageModel": [[{ "node": "Agente Sofia (Claude)", "type": "ai_languageModel", "index": 0 }]] },
@@ -665,7 +665,7 @@
     "errorWorkflow": ""
   },
   "staticData": null,
-  "meta": { "templateId": "agente-psico-agenda-whatsapp" },
+  "meta": { "templateId": "agente-psiplanner-whatsapp" },
   "pinData": {},
   "versionId": "1.0.0",
   "triggerCount": 0,

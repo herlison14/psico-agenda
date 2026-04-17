@@ -1,5 +1,5 @@
 -- Migration: tabela de histórico de conversas para o agente WhatsApp (n8n)
--- Executar no mesmo banco PostgreSQL (Railway) do psico-agenda
+-- Executar no mesmo banco PostgreSQL (Railway) do psiplanner
 
 CREATE TABLE IF NOT EXISTS chat_history (
   id          BIGSERIAL PRIMARY KEY,

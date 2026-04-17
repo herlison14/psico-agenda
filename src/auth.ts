@@ -8,7 +8,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   // Required in production behind Vercel's proxy and custom domains
-  // (psico-agenda-swart.vercel.app / psiplanner.com.br). Without this,
+  // (psiplanner.onrender.com / psiplanner.com.br). Without this,
   // NextAuth v5 rejects the Host header and sign-in silently fails.
   trustHost: true,
   session: { strategy: 'jwt' },

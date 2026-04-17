@@ -5,7 +5,7 @@
 **Importar nesta ordem:**
 
 1. `notificar_psicologa_n8n.json` — importar **primeiro**, anotar o ID gerado
-2. `agente_psico_agenda_n8n.json` — importar em seguida
+2. `agente_psiplanner_n8n.json` — importar em seguida
 
 No n8n: **Settings → Import workflow → selecionar o arquivo**
 
@@ -19,7 +19,7 @@ Configurar em: **Settings → Environment Variables**
 
 | Variável | Valor | Descrição |
 |---|---|---|
-| `PSICO_API_URL` | `https://www.psiplanner.com.br` | URL do psico-agenda em produção (sem `/` no final) |
+| `PSICO_API_URL` | `https://www.psiplanner.com.br` | URL do PsiPlanner em produção (sem `/` no final) |
 | `AGENTE_API_KEY` | (mesma do `.env.local`) | Chave de autenticação dos endpoints `/api/agente/*` |
 | `PSICOLOGO_ID` | UUID do psicólogo | Pegar no banco: `SELECT id FROM psicologos LIMIT 1` |
 | `ANTHROPIC_API_KEY` | `sk-ant-...` | Chave da API Anthropic |
