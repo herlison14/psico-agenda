@@ -2,11 +2,9 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { Leaf, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -21,36 +19,45 @@ export default function LoginPage() {
     setLoading(true)
 
     if (modo === 'cadastro') {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: senha }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setErro(data.error ?? 'Erro ao criar conta.')
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: senha }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setErro(data?.error ?? 'Erro ao criar conta.')
+          setLoading(false)
+          return
+        }
+      } catch {
+        setErro('Falha de rede ao criar conta.')
         setLoading(false)
         return
       }
-      const result = await signIn('credentials', { email, password: senha, redirect: false })
-      if (result?.error) {
-        setErro('Conta criada! Faça login para continuar.')
-        setModo('login')
-      } else {
-        router.push('/')
-        router.refresh()
-      }
-    } else {
-      const result = await signIn('credentials', { email, password: senha, redirect: false })
-      if (result?.error) {
-        setErro('E-mail ou senha incorretos.')
-      } else {
-        router.push('/')
-        router.refresh()
-      }
     }
 
-    setLoading(false)
+    const result = await signIn('credentials', {
+      email,
+      password: senha,
+      redirect: false,
+    })
+
+    if (!result || result.error) {
+      setErro(
+        modo === 'cadastro'
+          ? 'Conta criada, mas não foi possível entrar automaticamente. Tente fazer login.'
+          : 'E-mail ou senha incorretos.'
+      )
+      setLoading(false)
+      if (modo === 'cadastro') setModo('login')
+      return
+    }
+
+    // Full-page reload so the session cookie is picked up by the proxy/middleware
+    // on the very next request. router.push alone leaves the SSR layer stale.
+    window.location.assign('/')
   }
 
   return (

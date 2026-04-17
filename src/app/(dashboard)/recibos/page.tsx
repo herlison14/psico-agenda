@@ -167,16 +167,41 @@ export default function RecibosPage() {
   const [semPerfil, setSemPerfil] = useState(false)
 
   useEffect(() => {
-    // demo mode: sem guard de sessao
-    Promise.all([
-      fetch('/api/psicologos').then(r => r.json()),
-      fetch('/api/recibos').then(r => r.json()),
-    ]).then(([psicData, recibosData]) => {
-      if (psicData) setPsicologo(psicData)
-      else setSemPerfil(true)
-      if (Array.isArray(recibosData)) setRecibos(recibosData as Recibo[])
-      setLoading(false)
-    })
+    let cancelled = false
+
+    async function load() {
+      try {
+        const [psicRes, recibosRes] = await Promise.all([
+          fetch('/api/psicologos'),
+          fetch('/api/recibos'),
+        ])
+
+        const psicData = psicRes.ok ? await psicRes.json() : null
+        const recibosData = recibosRes.ok ? await recibosRes.json() : []
+
+        if (cancelled) return
+
+        // Psicólogo válido só se for objeto sem flag 'error'
+        if (psicData && typeof psicData === 'object' && !('error' in psicData)) {
+          setPsicologo(psicData as Psicologo)
+        } else {
+          setSemPerfil(true)
+        }
+
+        setRecibos(Array.isArray(recibosData) ? (recibosData as Recibo[]) : [])
+      } catch (err) {
+        console.error('[recibos load]', err)
+        if (!cancelled) {
+          setRecibos([])
+          setSemPerfil(true)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
   }, [session])
 
   async function handleDownload(recibo: Recibo) {

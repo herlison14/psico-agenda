@@ -42,15 +42,27 @@ export default function HistoricoPage() {
   const [saving, setSaving] = useState(false)
 
   async function load() {
-    const [resPac, resSes] = await Promise.all([
-      fetch(`/api/pacientes/${id}`),
-      fetch(`/api/sessoes?paciente_id=${id}`),
-    ])
-    const pac = await resPac.json()
-    const ses = await resSes.json()
-    if (pac && !pac.error) setPaciente(pac)
-    if (Array.isArray(ses)) setSessoes(ses.sort((a: Sessao, b: Sessao) => b.data_hora.localeCompare(a.data_hora)))
-    setLoading(false)
+    setLoading(true)
+    try {
+      const [resPac, resSes] = await Promise.all([
+        fetch(`/api/pacientes/${id}`),
+        fetch(`/api/sessoes?paciente_id=${id}`),
+      ])
+      const pac = resPac.ok ? await resPac.json() : null
+      const ses = resSes.ok ? await resSes.json() : []
+
+      if (pac && typeof pac === 'object' && !('error' in pac)) setPaciente(pac)
+      if (Array.isArray(ses)) {
+        setSessoes((ses as Sessao[]).sort((a, b) => b.data_hora.localeCompare(a.data_hora)))
+      } else {
+        setSessoes([])
+      }
+    } catch (err) {
+      console.error('[paciente load]', err)
+      setSessoes([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { load() }, [id])

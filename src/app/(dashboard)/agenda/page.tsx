@@ -46,20 +46,34 @@ export default function AgendaPage() {
   const diasSemana = Array.from({ length: 7 }, (_, i) => addDays(semanaInicio, i))
 
   const loadSessoes = useCallback(async () => {
-    // demo mode: sem guard de sessao
-    const inicio = semanaInicio.toISOString()
-    const fim = addDays(semanaInicio, 7).toISOString()
-    const res = await fetch(`/api/sessoes?inicio=${inicio}&fim=${fim}`)
-    const data = await res.json()
-    if (Array.isArray(data)) setSessoes(data as Sessao[])
-    setLoading(false)
-  }, [semanaInicio, session])
+    setLoading(true)
+    try {
+      const inicio = semanaInicio.toISOString()
+      const fim = addDays(semanaInicio, 7).toISOString()
+      const res = await fetch(`/api/sessoes?inicio=${inicio}&fim=${fim}`)
+      if (!res.ok) {
+        console.warn('[GET /api/sessoes] status', res.status)
+        setSessoes([])
+        return
+      }
+      const data = await res.json()
+      if (Array.isArray(data)) setSessoes(data as Sessao[])
+      else setSessoes([])
+    } catch (err) {
+      console.error('[loadSessoes]', err)
+      setSessoes([])
+    } finally {
+      setLoading(false)
+    }
+  }, [semanaInicio])
 
   useEffect(() => {
-    // demo mode: sem guard de sessao
+    let cancelled = false
     fetch('/api/pacientes?ativo=true')
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setPacientes(data) })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { if (!cancelled && Array.isArray(data)) setPacientes(data) })
+      .catch(err => console.error('[GET /api/pacientes]', err))
+    return () => { cancelled = true }
   }, [session])
 
   useEffect(() => { loadSessoes() }, [loadSessoes])

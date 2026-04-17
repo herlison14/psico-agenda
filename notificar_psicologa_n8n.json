@@ -1,0 +1,160 @@
+{
+  "name": "Sub-workflow: Notificar Psicóloga",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Trigger (chamado pelo Agente)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [80, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1",
+              "name": "motivo",
+              "value": "={{ $json.query ?? $json.motivo ?? 'Paciente solicitou atendimento humano' }}",
+              "type": "string"
+            },
+            {
+              "id": "e2",
+              "name": "paciente_phone",
+              "value": "={{ $json.paciente_phone ?? $json.phone ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "e3",
+              "name": "paciente_nome",
+              "value": "={{ $json.paciente_nome ?? $json.name ?? 'Paciente' }}",
+              "type": "string"
+            },
+            {
+              "id": "e4",
+              "name": "instanceId",
+              "value": "={{ $json.instanceId ?? $env.EVOLUTION_INSTANCE_ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2",
+      "name": "Extrair Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=agent_status:{{ $json.paciente_phone }}",
+        "value": "disabled",
+        "expire": true,
+        "ttl": 86400,
+        "options": {}
+      },
+      "id": "3",
+      "name": "Redis - Desativar Agente (24h)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [520, 300],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.evolution-api.com/message/sendText/{{ $('Extrair Dados').item.json.instanceId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Extrair Dados').item.json.paciente_phone, text: 'Vou te transferir para a Dra. agora. Ela entrará em contato com você em breve. 💙', delay: 1500 }) }}",
+        "options": {}
+      },
+      "id": "4",
+      "name": "Avisar Paciente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [740, 180]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.evolution-api.com/message/sendText/{{ $('Extrair Dados').item.json.instanceId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $env.PSICOLOGA_PHONE, text: '🔔 *Atenção — Agente Sofia*\\n\\n*Paciente:* ' + $('Extrair Dados').item.json.paciente_nome + '\\n*Telefone:* ' + $('Extrair Dados').item.json.paciente_phone + '\\n\\n*Motivo:* ' + $('Extrair Dados').item.json.motivo + '\\n\\n_O agente foi pausado para este contato por 24h. Responda diretamente pelo WhatsApp._', delay: 1000 }) }}",
+        "options": {}
+      },
+      "id": "5",
+      "name": "Notificar Psicóloga (WhatsApp)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [740, 420]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "resultado",
+              "value": "notificacao_enviada",
+              "type": "string"
+            },
+            {
+              "id": "r2",
+              "name": "agente_desativado",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Retornar Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [960, 300]
+    }
+  ],
+  "connections": {
+    "Trigger (chamado pelo Agente)": { "main": [[{ "node": "Extrair Dados", "type": "main", "index": 0 }]] },
+    "Extrair Dados": { "main": [[{ "node": "Redis - Desativar Agente (24h)", "type": "main", "index": 0 }]] },
+    "Redis - Desativar Agente (24h)": {
+      "main": [
+        [
+          { "node": "Avisar Paciente", "type": "main", "index": 0 },
+          { "node": "Notificar Psicóloga (WhatsApp)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Avisar Paciente": { "main": [[{ "node": "Retornar Status", "type": "main", "index": 0 }]] },
+    "Notificar Psicóloga (WhatsApp)": { "main": [[{ "node": "Retornar Status", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": { "templateId": "notificar-psicologa-sub" },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 0,
+  "tags": [{ "name": "Sub-workflow" }, { "name": "WhatsApp" }, { "name": "Psicologia" }]
+}

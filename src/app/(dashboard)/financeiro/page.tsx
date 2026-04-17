@@ -16,15 +16,21 @@ export default function FinanceiroPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // demo mode: sem guard de sessao
+    let cancelled = false
     setLoading(true)
     const mesStr = `${ano}-${String(mes + 1).padStart(2, '0')}`
     fetch(`/api/sessoes?mes=${mesStr}&status=realizado`)
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : [])
       .then(data => {
-        if (Array.isArray(data)) setSessoes(data as Sessao[])
-        setLoading(false)
+        if (cancelled) return
+        setSessoes(Array.isArray(data) ? (data as Sessao[]) : [])
       })
+      .catch(err => {
+        console.error('[GET /api/sessoes financeiro]', err)
+        if (!cancelled) setSessoes([])
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [mes, ano, session])
 
   function mudarMes(delta: number) {

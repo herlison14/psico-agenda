@@ -1,0 +1,673 @@
+{
+  "name": "Agente Psico-Agenda WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook (WhatsApp)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [80, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "filter-1",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "messages",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "filter-2",
+              "leftValue": "={{ $json.body.data.message.fromMe }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "2",
+      "name": "Filtro",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "a1", "name": "phone", "value": "={{ $json.body.data.key.remoteJid.replace('@s.whatsapp.net', '') }}", "type": "string" },
+            { "id": "a2", "name": "name", "value": "={{ $json.body.data.pushName }}", "type": "string" },
+            { "id": "a3", "name": "messageType", "value": "={{ $json.body.data.message.messageType ?? 'conversation' }}", "type": "string" },
+            { "id": "a4", "name": "messageText", "value": "={{ $json.body.data.message.conversation ?? $json.body.data.message.extendedTextMessage?.text ?? '' }}", "type": "string" },
+            { "id": "a5", "name": "audioUrl", "value": "={{ $json.body.data.message.audioMessage?.url ?? '' }}", "type": "string" },
+            { "id": "a6", "name": "imageUrl", "value": "={{ $json.body.data.message.imageMessage?.url ?? '' }}", "type": "string" },
+            { "id": "a7", "name": "imageCaption", "value": "={{ $json.body.data.message.imageMessage?.caption ?? '' }}", "type": "string" },
+            { "id": "a8", "name": "instanceId", "value": "={{ $json.body.instance }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "Dados Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=agent_status:{{ $json.phone }}",
+        "options": {}
+      },
+      "id": "4",
+      "name": "Redis - Status Agente",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [740, 300],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": "disabled",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "5",
+      "name": "Agente Ativo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {},
+      "id": "6",
+      "name": "Agente Desativado",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1180, 420]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.messageType }}", "rightValue": "conversation", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "texto" },
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.messageType }}", "rightValue": "extendedTextMessage", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "texto" },
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.messageType }}", "rightValue": "audioMessage", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "audio" },
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.messageType }}", "rightValue": "imageMessage", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "imagem" }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "7",
+      "name": "Tipo de Mensagem",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1180, 300]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "key": "=buffer:{{ $json.phone }}",
+        "value": "={{ JSON.stringify({ type: 'text', content: $json.messageText, ts: Date.now() }) }}",
+        "options": {}
+      },
+      "id": "8",
+      "name": "Redis - Buffer Texto",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1400, 160],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.evolution-api.com/message/getBase64FromMediaMessage/{{ $json.instanceId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: { key: { remoteJid: $json.phone + '@s.whatsapp.net', id: $json.audioId } } }) }}",
+        "options": {}
+      },
+      "id": "9",
+      "name": "Baixar Áudio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 280]
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "data",
+        "options": { "language": "pt" }
+      },
+      "id": "10",
+      "name": "Transcrever Áudio (Whisper)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [1620, 280],
+      "credentials": { "openAiApi": { "id": "openai-cred", "name": "OpenAI" } }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "key": "=buffer:{{ $('Dados Lead').item.json.phone }}",
+        "value": "={{ JSON.stringify({ type: 'audio', content: $json.text, ts: Date.now() }) }}",
+        "options": {}
+      },
+      "id": "11",
+      "name": "Redis - Buffer Áudio",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1840, 280],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 1024, messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'url', url: $('Dados Lead').item.json.imageUrl } }, { type: 'text', text: 'Descreva detalhadamente o que você vê nessa imagem. Caso tenha legenda, considere: ' + $('Dados Lead').item.json.imageCaption }] }] }) }}",
+        "options": {}
+      },
+      "id": "12",
+      "name": "Analisar Imagem (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 400]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "key": "=buffer:{{ $('Dados Lead').item.json.phone }}",
+        "value": "={{ JSON.stringify({ type: 'image', content: $json.content[0].text, caption: $('Dados Lead').item.json.imageCaption, ts: Date.now() }) }}",
+        "options": {}
+      },
+      "id": "13",
+      "name": "Redis - Buffer Imagem",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1620, 400],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "key": "=buffer:{{ $('Dados Lead').item.json.phone }}",
+        "value": "={{ JSON.stringify({ type: 'other', content: '[mensagem não suportada]', ts: Date.now() }) }}",
+        "options": {}
+      },
+      "id": "14",
+      "name": "Redis - Buffer Outros",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1400, 520],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "15",
+      "name": "Aguardar Mensagens",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2060, 300],
+      "webhookId": "wait-buffer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "buf-check",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      },
+      "id": "16",
+      "name": "Tem Mensagens no Buffer?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2280, 300]
+    },
+    {
+      "parameters": {},
+      "id": "17",
+      "name": "Buffer Vazio",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2500, 420]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-concat",
+              "name": "mensagensCompletas",
+              "value": "={{ $json.value.split('\\n').map(m => { try { const p = JSON.parse(m); return `[${p.type.toUpperCase()}]: ${p.content}`; } catch(e) { return m; } }).join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "18",
+      "name": "Consolidar Mensagens",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2500, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.PSICO_API_URL }}/api/agente/paciente",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.AGENTE_API_KEY }}" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "phone", "value": "={{ $('Dados Lead').item.json.phone }}" },
+            { "name": "psicologo_id", "value": "={{ $env.PSICOLOGO_ID }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "19",
+      "name": "Buscar Paciente (Psico-agenda)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2720, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "client-exists",
+              "leftValue": "={{ $json.encontrado }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "20",
+      "name": "Paciente Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2940, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PSICO_API_URL }}/api/agente/paciente",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.AGENTE_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ psicologo_id: $env.PSICOLOGO_ID, nome: $('Dados Lead').item.json.name, telefone: $('Dados Lead').item.json.phone }) }}",
+        "options": {}
+      },
+      "id": "21",
+      "name": "Criar Paciente (Psico-agenda)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3160, 420]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "22",
+      "name": "Merge Paciente",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [3380, 300]
+    },
+    {
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "=Mensagens recebidas do paciente:\n\n{{ $('Consolidar Mensagens').item.json.mensagensCompletas }}\n\nDados do paciente:\n- Nome: {{ $('Dados Lead').item.json.name }}\n- Telefone: {{ $('Dados Lead').item.json.phone }}\n- ID Paciente: {{ $json.paciente?.id ?? $json.paciente?.paciente?.id ?? 'novo paciente' }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "=Você é a assistente virtual da clínica de psicologia. Seu nome é Sofia.\n\nSua função é realizar o atendimento inicial dos pacientes via WhatsApp, com foco em:\n1. Responder dúvidas sobre a clínica e o processo terapêutico\n2. Verificar horários disponíveis para consultas\n3. Agendar, cancelar ou reagendar sessões\n4. Confirmar agendamentos existentes\n5. Escalar para a psicóloga quando necessário\n\nRegras importantes:\n- Responda sempre em português brasileiro, de forma acolhedora e empática\n- Nunca forneça orientações clínicas, diagnósticos ou conselhos terapêuticos\n- Para questões emocionais urgentes ou crises, acione imediatamente a tool notificar_psicologa\n- O ID do psicólogo para todas as operações é: {{ $env.PSICOLOGO_ID }}\n- O valor padrão da sessão é R$ 150,00 (confirme com o paciente se necessário)\n- Sessões têm duração de 50 minutos\n- Ao agendar, sempre confirme: nome completo, data, horário e valor\n- Nunca invente informações sobre horários — use sempre a tool verificar_horarios\n\nFluxo de agendamento:\n1. Pergunte se é primeira consulta ou retorno\n2. Use verificar_horarios para buscar datas disponíveis\n3. Apresente no máximo 5 opções de horário\n4. Confirme os dados antes de agendar\n5. Use agendar_sessao para confirmar\n6. Envie mensagem de confirmação com data/hora formatada\n\nData/hora atual: {{ new Date().toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}) }}"
+        }
+      },
+      "id": "23",
+      "name": "Agente Sofia (Claude)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [3600, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-opus-4-6",
+        "options": { "temperature": 0.7 }
+      },
+      "id": "24",
+      "name": "Claude claude-opus-4-6",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [3480, 500],
+      "credentials": { "anthropicApi": { "id": "anthropic-cred", "name": "Anthropic" } }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Dados Lead').item.json.phone }}",
+        "tableName": "chat_history"
+      },
+      "id": "25",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [3600, 500],
+      "credentials": { "postgres": { "id": "postgres-cred", "name": "Postgres" } }
+    },
+    {
+      "parameters": {
+        "name": "verificar_horarios",
+        "description": "Verifica os horários disponíveis para agendamento. Use quando o paciente quiser saber quando pode marcar uma consulta. Retorna lista de datas e horários livres nos próximos 7 dias (seg-sex).",
+        "method": "GET",
+        "url": "={{ $env.PSICO_API_URL }}/api/agente/horarios",
+        "sendHeaders": true,
+        "headerParameters": {
+          "values": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.AGENTE_API_KEY }}" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "values": [
+            { "name": "psicologo_id", "value": "={{ $env.PSICOLOGO_ID }}" },
+            { "name": "dias", "value": "7" }
+          ]
+        }
+      },
+      "id": "26",
+      "name": "Tool - Verificar Horários",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [3720, 500]
+    },
+    {
+      "parameters": {
+        "name": "agendar_sessao",
+        "description": "Agenda uma sessão para o paciente. Use após o paciente confirmar o horário desejado. Parâmetros obrigatórios no body JSON: paciente_id (string UUID), data_hora (ISO 8601, ex: 2026-04-01T09:00:00.000Z), valor (número). Opcional: observacoes (string).",
+        "method": "POST",
+        "url": "={{ $env.PSICO_API_URL }}/api/agente/sessao",
+        "sendHeaders": true,
+        "headerParameters": {
+          "values": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.AGENTE_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}"
+      },
+      "id": "34",
+      "name": "Tool - Agendar Sessão",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [3840, 500]
+    },
+    {
+      "parameters": {
+        "name": "buscar_proxima_sessao",
+        "description": "Busca a próxima sessão agendada do paciente. Use quando o paciente perguntar sobre o próximo agendamento ou quiser cancelar/reagendar. Substitua {paciente_id} pelo ID real do paciente.",
+        "method": "GET",
+        "url": "={{ $env.PSICO_API_URL }}/api/agente/sessao/{paciente_id}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "values": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.AGENTE_API_KEY }}" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "values": [
+            { "name": "tipo", "value": "proxima" },
+            { "name": "psicologo_id", "value": "={{ $env.PSICOLOGO_ID }}" }
+          ]
+        }
+      },
+      "id": "35",
+      "name": "Tool - Buscar Próxima Sessão",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [3960, 500]
+    },
+    {
+      "parameters": {
+        "name": "cancelar_ou_reagendar_sessao",
+        "description": "Cancela ou reagenda uma sessão existente. Para cancelar: informe status='cancelado'. Para reagendar: informe data_hora (ISO 8601) com o novo horário. Substitua {sessao_id} pelo ID real da sessão. Body JSON: { status?: string, data_hora?: string, observacoes?: string }",
+        "method": "PATCH",
+        "url": "={{ $env.PSICO_API_URL }}/api/agente/sessao/{sessao_id}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "values": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.AGENTE_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}"
+      },
+      "id": "36",
+      "name": "Tool - Cancelar/Reagendar",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [4080, 500]
+    },
+    {
+      "parameters": {
+        "name": "notificar_psicologa",
+        "description": "Notifica a psicóloga diretamente. Use quando: paciente em crise emocional, pedido urgente, reclamação grave, ou quando você não conseguir resolver. Passe o motivo detalhado da notificação.",
+        "workflowId": "={{ $env.NOTIFY_HUMAN_WORKFLOW_ID }}"
+      },
+      "id": "27",
+      "name": "Tool - Notificar Psicóloga",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [4200, 500]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Dados Lead').item.json.phone }}",
+        "host": "={{ $env.REDIS_HOST }}",
+        "port": 6379,
+        "ttl": 3600
+      },
+      "id": "28",
+      "name": "Redis Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.4,
+      "position": [4320, 500],
+      "credentials": { "redis": { "id": "redis-cred", "name": "Redis" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Humanizar resposta: divide em partes naturais para simular digitação humana\nconst resposta = $input.first().json.output;\n\n// Divide em frases/parágrafos\nconst partes = resposta\n  .split(/(?<=[.!?])\\s+/)\n  .reduce((acc, frase) => {\n    if (acc.length === 0) {\n      acc.push(frase);\n    } else {\n      const ultimo = acc[acc.length - 1];\n      if (ultimo.length + frase.length < 200) {\n        acc[acc.length - 1] = ultimo + ' ' + frase;\n      } else {\n        acc.push(frase);\n      }\n    }\n    return acc;\n  }, []);\n\n// Adiciona delay proporcional ao tamanho de cada parte (simula digitação)\nconst phone = $('Dados Lead').first().json.phone;\nconst instanceId = $('Dados Lead').first().json.instanceId;\n\nreturn partes.map((texto, i) => ({\n  json: {\n    phone,\n    instanceId,\n    texto: texto.trim(),\n    delay: Math.min(1000 + texto.length * 30, 5000), // ~30ms por char, max 5s\n    ordem: i\n  }\n}));"
+      },
+      "id": "29",
+      "name": "Humanizar Resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3820, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "30",
+      "name": "Loop por Partes",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [4040, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.evolution-api.com/message/sendText/{{ $json.instanceId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.texto, delay: $json.delay }) }}",
+        "options": {}
+      },
+      "id": "31",
+      "name": "Enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4260, 300]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.ceil($json.delay / 1000) }}",
+        "unit": "seconds"
+      },
+      "id": "32",
+      "name": "Aguardar Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [4480, 300],
+      "webhookId": "wait-delay"
+    },
+    {
+      "parameters": {},
+      "id": "33",
+      "name": "Fim",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [4700, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (WhatsApp)": { "main": [[{ "node": "Filtro", "type": "main", "index": 0 }]] },
+    "Filtro": { "main": [[{ "node": "Dados Lead", "type": "main", "index": 0 }]] },
+    "Dados Lead": { "main": [[{ "node": "Redis - Status Agente", "type": "main", "index": 0 }]] },
+    "Redis - Status Agente": { "main": [[{ "node": "Agente Ativo?", "type": "main", "index": 0 }]] },
+    "Agente Ativo?": {
+      "main": [
+        [{ "node": "Tipo de Mensagem", "type": "main", "index": 0 }],
+        [{ "node": "Agente Desativado", "type": "main", "index": 0 }]
+      ]
+    },
+    "Tipo de Mensagem": {
+      "main": [
+        [{ "node": "Redis - Buffer Texto", "type": "main", "index": 0 }],
+        [{ "node": "Baixar Áudio", "type": "main", "index": 0 }],
+        [{ "node": "Analisar Imagem (Claude)", "type": "main", "index": 0 }],
+        [{ "node": "Redis - Buffer Outros", "type": "main", "index": 0 }]
+      ]
+    },
+    "Redis - Buffer Texto": { "main": [[{ "node": "Aguardar Mensagens", "type": "main", "index": 0 }]] },
+    "Baixar Áudio": { "main": [[{ "node": "Transcrever Áudio (Whisper)", "type": "main", "index": 0 }]] },
+    "Transcrever Áudio (Whisper)": { "main": [[{ "node": "Redis - Buffer Áudio", "type": "main", "index": 0 }]] },
+    "Redis - Buffer Áudio": { "main": [[{ "node": "Aguardar Mensagens", "type": "main", "index": 0 }]] },
+    "Analisar Imagem (Claude)": { "main": [[{ "node": "Redis - Buffer Imagem", "type": "main", "index": 0 }]] },
+    "Redis - Buffer Imagem": { "main": [[{ "node": "Aguardar Mensagens", "type": "main", "index": 0 }]] },
+    "Redis - Buffer Outros": { "main": [[{ "node": "Aguardar Mensagens", "type": "main", "index": 0 }]] },
+    "Aguardar Mensagens": { "main": [[{ "node": "Tem Mensagens no Buffer?", "type": "main", "index": 0 }]] },
+    "Tem Mensagens no Buffer?": {
+      "main": [
+        [{ "node": "Consolidar Mensagens", "type": "main", "index": 0 }],
+        [{ "node": "Buffer Vazio", "type": "main", "index": 0 }]
+      ]
+    },
+    "Consolidar Mensagens": { "main": [[{ "node": "Buscar Paciente (Psico-agenda)", "type": "main", "index": 0 }]] },
+    "Buscar Paciente (Psico-agenda)": { "main": [[{ "node": "Paciente Existe?", "type": "main", "index": 0 }]] },
+    "Paciente Existe?": {
+      "main": [
+        [{ "node": "Merge Paciente", "type": "main", "index": 0 }],
+        [{ "node": "Criar Paciente (Psico-agenda)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Criar Paciente (Psico-agenda)": { "main": [[{ "node": "Merge Paciente", "type": "main", "index": 1 }]] },
+    "Merge Paciente": { "main": [[{ "node": "Agente Sofia (Claude)", "type": "main", "index": 0 }]] },
+    "Agente Sofia (Claude)": { "main": [[{ "node": "Humanizar Resposta", "type": "main", "index": 0 }]] },
+    "Claude claude-opus-4-6": { "ai_languageModel": [[{ "node": "Agente Sofia (Claude)", "type": "ai_languageModel", "index": 0 }]] },
+    "Postgres Chat Memory": { "ai_memory": [[{ "node": "Agente Sofia (Claude)", "type": "ai_memory", "index": 0 }]] },
+    "Tool - Verificar Horários": { "ai_tool": [[{ "node": "Agente Sofia (Claude)", "type": "ai_tool", "index": 0 }]] },
+    "Tool - Agendar Sessão": { "ai_tool": [[{ "node": "Agente Sofia (Claude)", "type": "ai_tool", "index": 1 }]] },
+    "Tool - Buscar Próxima Sessão": { "ai_tool": [[{ "node": "Agente Sofia (Claude)", "type": "ai_tool", "index": 2 }]] },
+    "Tool - Cancelar/Reagendar": { "ai_tool": [[{ "node": "Agente Sofia (Claude)", "type": "ai_tool", "index": 3 }]] },
+    "Tool - Notificar Psicóloga": { "ai_tool": [[{ "node": "Agente Sofia (Claude)", "type": "ai_tool", "index": 4 }]] },
+    "Redis Chat Memory": { "ai_memory": [[{ "node": "Agente Sofia (Claude)", "type": "ai_memory", "index": 1 }]] },
+    "Humanizar Resposta": { "main": [[{ "node": "Loop por Partes", "type": "main", "index": 0 }]] },
+    "Loop por Partes": { "main": [[{ "node": "Enviar WhatsApp", "type": "main", "index": 0 }]] },
+    "Enviar WhatsApp": { "main": [[{ "node": "Aguardar Delay", "type": "main", "index": 0 }]] },
+    "Aguardar Delay": { "main": [[{ "node": "Loop por Partes", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": { "templateId": "agente-psico-agenda-whatsapp" },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 0,
+  "tags": [{ "name": "WhatsApp" }, { "name": "Claude" }, { "name": "Psicologia" }, { "name": "Agendamento" }]
+}

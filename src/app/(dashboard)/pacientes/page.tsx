@@ -36,10 +36,22 @@ export default function PacientesPage() {
   const [erro, setErro] = useState('')
 
   async function loadPacientes() {
-    const res = await fetch('/api/pacientes')
-    const data = await res.json()
-    if (Array.isArray(data)) setPacientes(data)
-    setLoading(false)
+    setLoading(true)
+    try {
+      const res = await fetch('/api/pacientes')
+      if (!res.ok) {
+        console.warn('[GET /api/pacientes] status', res.status)
+        setPacientes([])
+        return
+      }
+      const data = await res.json()
+      setPacientes(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('[loadPacientes]', err)
+      setPacientes([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { loadPacientes() }, [session])

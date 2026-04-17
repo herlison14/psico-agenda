@@ -8,8 +8,22 @@ import { ptBR } from 'date-fns/locale'
 import { CalendarDays, DollarSign, FileText, Clock, Users, UserX } from 'lucide-react'
 import Link from 'next/link'
 
+async function safeJson<T = unknown>(url: string): Promise<T | null> {
+  try {
+    const r = await fetch(url)
+    if (!r.ok) {
+      console.warn(`[fetch ${url}] status ${r.status}`)
+      return null
+    }
+    return (await r.json()) as T
+  } catch (err) {
+    console.error(`[fetch ${url}] network error`, err)
+    return null
+  }
+}
+
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [sessoesHoje, setSessoesHoje] = useState<Sessao[]>([])
   const [receitaMes, setReceitaMes] = useState(0)
   const [recibosCount, setRecibosCount] = useState(0)
@@ -17,48 +31,65 @@ export default function DashboardPage() {
   const [faltasMes, setFaltasMes] = useState(0)
   const [psicologo, setPsicologo] = useState<Psicologo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
-    // demo mode: sem guard de sessao
+    // Espera a sessão carregar antes de buscar dados protegidos
+    if (status === 'loading') return
+
+    let cancelled = false
 
     async function load() {
+      setErro(null)
       const now = new Date()
       const inicio = startOfDay(now).toISOString()
       const fim = endOfDay(now).toISOString()
       const mes = format(now, 'yyyy-MM')
 
-      const [psicRes, sessoesRes, sessoesRealizadasRes, recibosRes, pacientesRes, faltasRes] = await Promise.all([
-        fetch('/api/psicologos').then(r => r.json()),
-        fetch(`/api/sessoes?inicio=${inicio}&fim=${fim}`).then(r => r.json()),
-        fetch(`/api/sessoes?mes=${mes}&status=realizado`).then(r => r.json()),
-        fetch('/api/recibos').then(r => r.json()),
-        fetch('/api/pacientes').then(r => r.json()),
-        fetch(`/api/sessoes?mes=${mes}&status=faltou`).then(r => r.json()),
-      ])
+      try {
+        const [psicRes, sessoesRes, sessoesRealizadasRes, recibosRes, pacientesRes, faltasRes] = await Promise.all([
+          safeJson<Psicologo | { error: string } | null>('/api/psicologos'),
+          safeJson<Sessao[] | { error: string }>(`/api/sessoes?inicio=${inicio}&fim=${fim}`),
+          safeJson<Sessao[] | { error: string }>(`/api/sessoes?mes=${mes}&status=realizado`),
+          safeJson<{ created_at: string }[] | { error: string }>('/api/recibos'),
+          safeJson<{ ativo: boolean }[] | { error: string }>('/api/pacientes'),
+          safeJson<Sessao[] | { error: string }>(`/api/sessoes?mes=${mes}&status=faltou`),
+        ])
 
-      if (psicRes) setPsicologo(psicRes)
-      if (Array.isArray(sessoesRes)) setSessoesHoje(sessoesRes)
-      if (Array.isArray(sessoesRealizadasRes)) {
-        const total = sessoesRealizadasRes.reduce((acc: number, s: Sessao) => acc + Number(s.valor), 0)
-        setReceitaMes(total)
-      }
-      if (Array.isArray(recibosRes)) {
-        const now2 = new Date()
-        const inicioMes = new Date(now2.getFullYear(), now2.getMonth(), 1)
-        const fimMes = new Date(now2.getFullYear(), now2.getMonth() + 1, 0)
-        const count = recibosRes.filter((r: { created_at: string }) => {
-          const d = new Date(r.created_at)
-          return d >= inicioMes && d <= fimMes
-        }).length
-        setRecibosCount(count)
-      }
-      if (Array.isArray(pacientesRes)) setPacientesAtivos(pacientesRes.filter((p: { ativo: boolean }) => p.ativo).length)
-      if (Array.isArray(faltasRes)) setFaltasMes(faltasRes.length)
+        if (cancelled) return
 
-      setLoading(false)
+        if (psicRes && typeof psicRes === 'object' && !('error' in psicRes)) {
+          setPsicologo(psicRes as Psicologo)
+        }
+        if (Array.isArray(sessoesRes)) setSessoesHoje(sessoesRes as Sessao[])
+        if (Array.isArray(sessoesRealizadasRes)) {
+          const total = (sessoesRealizadasRes as Sessao[]).reduce((acc, s) => acc + Number(s.valor), 0)
+          setReceitaMes(total)
+        }
+        if (Array.isArray(recibosRes)) {
+          const now2 = new Date()
+          const inicioMes = new Date(now2.getFullYear(), now2.getMonth(), 1)
+          const fimMes = new Date(now2.getFullYear(), now2.getMonth() + 1, 0, 23, 59, 59)
+          const count = (recibosRes as { created_at: string }[]).filter((r) => {
+            const d = new Date(r.created_at)
+            return d >= inicioMes && d <= fimMes
+          }).length
+          setRecibosCount(count)
+        }
+        if (Array.isArray(pacientesRes)) {
+          setPacientesAtivos((pacientesRes as { ativo: boolean }[]).filter((p) => p.ativo).length)
+        }
+        if (Array.isArray(faltasRes)) setFaltasMes((faltasRes as Sessao[]).length)
+      } catch (err) {
+        console.error('[dashboard load]', err)
+        if (!cancelled) setErro('Não foi possível carregar os dados. Tente recarregar a página.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
     load()
-  }, [session])
+    return () => { cancelled = true }
+  }, [session, status])
 
   const statusColor: Record<string, string> = {
     agendado: 'bg-[#E8F4FF] text-[#2563EB]',
@@ -82,6 +113,11 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {erro && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
+          {erro}
+        </div>
+      )}
       <div className="mb-8">
         <h1
           className="text-2xl font-semibold text-[#1C2B22]"

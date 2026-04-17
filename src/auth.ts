@@ -7,6 +7,10 @@ import { authConfig } from '@/auth.config'
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  // Required in production behind Vercel's proxy and custom domains
+  // (psico-agenda-swart.vercel.app / psiplanner.com.br). Without this,
+  // NextAuth v5 rejects the Host header and sign-in silently fails.
+  trustHost: true,
   session: { strategy: 'jwt' },
   providers: [
     Credentials({
@@ -17,18 +21,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const { rows } = await pool.query(
-          'SELECT id, email, password_hash FROM psicologos WHERE email = $1',
-          [credentials.email]
-        )
+        try {
+          const { rows } = await pool.query(
+            'SELECT id, email, password_hash FROM psicologos WHERE email = $1',
+            [credentials.email]
+          )
 
-        const user = rows[0]
-        if (!user || !user.password_hash) return null
+          const user = rows[0]
+          if (!user || !user.password_hash) return null
 
-        const valid = await compare(credentials.password as string, user.password_hash)
-        if (!valid) return null
+          const valid = await compare(credentials.password as string, user.password_hash)
+          if (!valid) return null
 
-        return { id: user.id, email: user.email }
+          return { id: String(user.id), email: user.email }
+        } catch (err) {
+          console.error('[auth.authorize] DB/hash error:', err)
+          return null
+        }
       },
     }),
   ],

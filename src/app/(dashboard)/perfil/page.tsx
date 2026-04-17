@@ -34,13 +34,23 @@ export default function PerfilPage() {
   const [erro, setErro] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     fetch('/api/psicologos')
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data) setForm(data)
-        else setForm(f => ({ ...f, email: session?.user?.email ?? '' }))
-        setLoading(false)
+        if (cancelled) return
+        if (data && typeof data === 'object' && !('error' in data)) {
+          setForm(data)
+        } else {
+          setForm(f => ({ ...f, email: session?.user?.email ?? '' }))
+        }
       })
+      .catch(err => {
+        console.error('[GET /api/psicologos]', err)
+        if (!cancelled) setForm(f => ({ ...f, email: session?.user?.email ?? '' }))
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [session])
 
   function handleChange(field: keyof Psicologo, value: string) {

@@ -9,16 +9,21 @@ export async function GET() {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { rows } = await pool.query(
-    `SELECT r.*, row_to_json(p.*) as paciente
-     FROM recibos r
-     LEFT JOIN pacientes p ON p.id = r.paciente_id
-     WHERE r.psicologo_id = $1
-     ORDER BY r.numero DESC`,
-    [session.user.id]
-  )
+  try {
+    const { rows } = await pool.query(
+      `SELECT r.*, row_to_json(p.*) as paciente
+       FROM recibos r
+       LEFT JOIN pacientes p ON p.id = r.paciente_id
+       WHERE r.psicologo_id = $1
+       ORDER BY r.numero DESC`,
+      [session.user.id]
+    )
 
-  return NextResponse.json(rows)
+    return NextResponse.json(rows)
+  } catch (err) {
+    console.error('[GET /api/recibos]', err)
+    return NextResponse.json({ error: 'Erro ao consultar recibos.' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -33,18 +38,27 @@ export async function POST(req: NextRequest) {
 
   const { paciente_id, sessao_id, valor, data_emissao, descricao } = await req.json()
 
-  const { rows: last } = await pool.query(
-    'SELECT COALESCE(MAX(numero), 0) + 1 as proximo FROM recibos WHERE psicologo_id = $1',
-    [session.user.id]
-  )
-  const numero = last[0].proximo
+  if (!paciente_id || valor == null || !data_emissao) {
+    return NextResponse.json({ error: 'paciente_id, valor e data_emissao são obrigatórios.' }, { status: 400 })
+  }
 
-  const { rows } = await pool.query(
-    `INSERT INTO recibos (psicologo_id, paciente_id, sessao_id, numero, valor, data_emissao, descricao)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING *`,
-    [session.user.id, paciente_id, sessao_id || null, numero, valor, data_emissao, descricao ?? 'Consulta Psicológica']
-  )
+  try {
+    const { rows: last } = await pool.query(
+      'SELECT COALESCE(MAX(numero), 0) + 1 as proximo FROM recibos WHERE psicologo_id = $1',
+      [session.user.id]
+    )
+    const numero = last[0].proximo
 
-  return NextResponse.json({ ...rows[0], numero }, { status: 201 })
+    const { rows } = await pool.query(
+      `INSERT INTO recibos (psicologo_id, paciente_id, sessao_id, numero, valor, data_emissao, descricao)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [session.user.id, paciente_id, sessao_id || null, numero, valor, data_emissao, descricao ?? 'Consulta Psicológica']
+    )
+
+    return NextResponse.json({ ...rows[0], numero }, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/recibos]', err)
+    return NextResponse.json({ error: 'Erro ao emitir recibo.' }, { status: 500 })
+  }
 }

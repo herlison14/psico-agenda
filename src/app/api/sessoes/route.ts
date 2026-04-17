@@ -64,8 +64,13 @@ export async function GET(req: NextRequest) {
 
   query += ' ORDER BY s.data_hora'
 
-  const { rows } = await pool.query(query, values)
-  return NextResponse.json(rows)
+  try {
+    const { rows } = await pool.query(query, values)
+    return NextResponse.json(rows)
+  } catch (err) {
+    console.error('[GET /api/sessoes]', err)
+    return NextResponse.json({ error: 'Erro ao consultar sessões.' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -79,12 +84,21 @@ export async function POST(req: NextRequest) {
 
   const { paciente_id, data_hora, duracao_min, valor, observacoes, status } = await req.json()
 
-  const { rows } = await pool.query(
-    `INSERT INTO sessoes (psicologo_id, paciente_id, data_hora, duracao_min, valor, observacoes, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING *`,
-    [session.user.id, paciente_id, data_hora, duracao_min ?? 50, valor, observacoes || null, status ?? 'agendado']
-  )
+  if (!paciente_id || !data_hora) {
+    return NextResponse.json({ error: 'paciente_id e data_hora são obrigatórios.' }, { status: 400 })
+  }
 
-  return NextResponse.json(rows[0], { status: 201 })
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO sessoes (psicologo_id, paciente_id, data_hora, duracao_min, valor, observacoes, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [session.user.id, paciente_id, data_hora, duracao_min ?? 50, valor, observacoes || null, status ?? 'agendado']
+    )
+
+    return NextResponse.json(rows[0], { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/sessoes]', err)
+    return NextResponse.json({ error: 'Erro ao criar sessão.' }, { status: 500 })
+  }
 }

@@ -25,13 +25,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   let idx = 1
   if (status !== undefined) { updates.push(`status=$${idx++}`); values.push(status) }
   if (notas_clinicas !== undefined) { updates.push(`notas_clinicas=$${idx++}`); values.push(notas_clinicas) }
+
+  if (updates.length === 0) {
+    return NextResponse.json({ error: 'Nenhum campo para atualizar.' }, { status: 400 })
+  }
+
   values.push(id, session.user.id)
 
-  const { rows } = await pool.query(
-    `UPDATE sessoes SET ${updates.join(', ')} WHERE id=$${idx++} AND psicologo_id=$${idx} RETURNING *`,
-    values
-  )
+  try {
+    const { rows } = await pool.query(
+      `UPDATE sessoes SET ${updates.join(', ')} WHERE id=$${idx++} AND psicologo_id=$${idx} RETURNING *`,
+      values
+    )
 
-  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(rows[0])
+    if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json(rows[0])
+  } catch (err) {
+    console.error('[PUT /api/sessoes/[id]]', err)
+    return NextResponse.json({ error: 'Erro ao atualizar sessão.' }, { status: 500 })
+  }
 }
