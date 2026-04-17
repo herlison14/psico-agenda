@@ -20,7 +20,7 @@ services:
 
   # ── FastAPI — agente Sofia ─────────────────────────────────────────────────
   - type: web
-    name: agente-sofia
+    name: agente-july
     runtime: python
     region: oregon
     plan: free
