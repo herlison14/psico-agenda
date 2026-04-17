@@ -1,10 +1,3 @@
-databases:
-  - name: psiplanner-db
-    plan: free
-    databaseName: psiplanner
-    user: psiplanner
-    postgresMajorVersion: 16
-
 services:
   # ── Next.js frontend ──────────────────────────────────────────────────────
   - type: web
@@ -17,9 +10,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: psiplanner-db
-          property: connectionString
+        sync: false
       - key: AUTH_SECRET
         generateValue: true
       - key: PSICOLOGO_ID
@@ -41,9 +32,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: psiplanner-db
-          property: connectionString
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: WAHA_URL
