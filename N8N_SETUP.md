@@ -1,4 +1,4 @@
-# Configuração do n8n — Agente Psico-Agenda
+# Configuração do n8n — Agente PsiPlanner
 
 ## 1. Importar os workflows
 
@@ -19,7 +19,7 @@ Configurar em: **Settings → Environment Variables**
 
 | Variável | Valor | Descrição |
 |---|---|---|
-| `PSICO_API_URL` | `https://psiplanner.com.br` | URL do psico-agenda em produção (sem `/` no final) |
+| `PSICO_API_URL` | `https://www.psiplanner.com.br` | URL do psico-agenda em produção (sem `/` no final) |
 | `AGENTE_API_KEY` | (mesma do `.env.local`) | Chave de autenticação dos endpoints `/api/agente/*` |
 | `PSICOLOGO_ID` | UUID do psicólogo | Pegar no banco: `SELECT id FROM psicologos LIMIT 1` |
 | `ANTHROPIC_API_KEY` | `sk-ant-...` | Chave da API Anthropic |
@@ -61,11 +61,11 @@ Ou colar o conteúdo diretamente no painel de queries do Railway.
 ```bash
 # Verificar horários
 curl -H "Authorization: Bearer SUA_AGENTE_API_KEY" \
-  "https://psiplanner.com.br/api/agente/horarios?psicologo_id=UUID"
+  "https://www.psiplanner.com.br/api/agente/horarios?psicologo_id=UUID"
 
 # Buscar paciente por telefone
 curl -H "Authorization: Bearer SUA_AGENTE_API_KEY" \
-  "https://psiplanner.com.br/api/agente/paciente?phone=5521999999999&psicologo_id=UUID"
+  "https://www.psiplanner.com.br/api/agente/paciente?phone=5521999999999&psicologo_id=UUID"
 ```
 
 ---

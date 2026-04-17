@@ -1,6 +1,8 @@
-# Psico Agenda
+# PsiPlanner
 
 Sistema de gestão de agenda e recibos para psicólogos. MVP completo com agenda semanal, cadastro de pacientes, geração de recibo PDF e exportação para Carnê-Leão.
+
+**Produção:** https://www.psiplanner.com.br
 
 ## Stack
 
