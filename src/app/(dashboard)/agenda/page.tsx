@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { Sessao, Paciente } from '@/types/psico'
 import {
   format, addDays, startOfWeek, isSameDay, parseISO, setHours, setMinutes
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, X, Loader2, CalendarDays, CheckCircle2, XCircle, UserX, FileEdit, Save } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Loader2, CalendarDays, CheckCircle2, XCircle, UserX, FileEdit, Save, Mic } from 'lucide-react'
 
 const HORAS = Array.from({ length: 16 }, (_, i) => i + 7)
 const STATUS_COLORS: Record<string, string> = {
@@ -42,6 +42,8 @@ export default function AgendaPage() {
   const [modalNotas, setModalNotas] = useState<Sessao | null>(null)
   const [notas, setNotas] = useState('')
   const [savingNotas, setSavingNotas] = useState(false)
+  const [transcrevendo, setTranscrevendo] = useState(false)
+  const audioInputRef = useRef<HTMLInputElement>(null)
 
   const diasSemana = Array.from({ length: 7 }, (_, i) => addDays(semanaInicio, i))
 
@@ -153,6 +155,23 @@ export default function AgendaPage() {
     setModalNotas(sessao)
     setNotas(sessao.notas_clinicas ?? '')
     setModalDetalhe(null)
+  }
+
+  async function transcreverAudio(file: File) {
+    if (!modalNotas) return
+    setTranscrevendo(true)
+    try {
+      const form = new FormData()
+      form.append('audio', file)
+      const res = await fetch(`/api/sessoes/${modalNotas.id}/transcrever`, { method: 'POST', body: form })
+      const data = await res.json()
+      if (res.ok && data.prontuario) setNotas(data.prontuario)
+      else alert(data.error ?? 'Erro ao transcrever.')
+    } catch {
+      alert('Erro de conexão ao transcrever.')
+    } finally {
+      setTranscrevendo(false)
+    }
   }
 
   async function salvarNotas() {
@@ -394,14 +413,33 @@ export default function AgendaPage() {
               <button onClick={() => setModalNotas(null)}><X className="w-5 h-5 text-gray-400" /></button>
             </div>
             <div className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">Notas clínicas</label>
+                <button
+                  type="button"
+                  onClick={() => audioInputRef.current?.click()}
+                  disabled={transcrevendo}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 transition-colors font-medium"
+                >
+                  {transcrevendo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mic className="w-3.5 h-3.5" />}
+                  {transcrevendo ? 'Transcrevendo...' : 'Transcrever consulta'}
+                </button>
+                <input
+                  ref={audioInputRef}
+                  type="file"
+                  accept="audio/*,.mp3,.mp4,.m4a,.wav,.webm,.ogg"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) transcreverAudio(f); e.target.value = '' }}
+                />
+              </div>
               <textarea
                 value={notas}
                 onChange={e => setNotas(e.target.value)}
                 rows={8}
-                placeholder="Registre sua evolução clínica, observações da sessão, técnicas utilizadas, plano terapêutico..."
+                placeholder="Registre sua evolução clínica, ou clique em 'Transcrever consulta' para gerar um prontuário SOAP automaticamente a partir do áudio da sessão..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none resize-none text-gray-800 placeholder:text-gray-400"
               />
-              <p className="text-xs text-gray-400 mt-1.5">Estas notas são confidenciais e visíveis apenas para você.</p>
+              <p className="text-xs text-gray-400 mt-1.5">Notas confidenciais — visíveis apenas para você. A transcrição gera prontuário no formato SOAP via IA.</p>
               <div className="flex justify-end gap-3 mt-4">
                 <button onClick={() => setModalNotas(null)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
                 <button onClick={salvarNotas} disabled={savingNotas} className="flex items-center gap-2 bg-[#1B3A2F] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#244D3F] disabled:opacity-60">
