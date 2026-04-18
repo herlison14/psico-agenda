@@ -18,7 +18,7 @@ import {
 import { signOut } from 'next-auth/react'
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/agenda', label: 'Agenda', icon: CalendarDays },
   { href: '/pacientes', label: 'Pacientes', icon: Users },
   { href: '/recibos', label: 'Recibos', icon: FileText },
@@ -47,7 +47,7 @@ export default function Sidebar() {
         </div>
         <div>
           <p className="text-white font-semibold text-base leading-tight tracking-wide">
-            Psico Agenda
+            PsiPlanner
           </p>
           <p className="text-[#A8D5BC] text-xs font-light mt-0.5">Gestão psicológica</p>
         </div>
@@ -56,7 +56,7 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-4 py-5 space-y-1">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const active = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/')
+          const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link
               key={href}

@@ -14,8 +14,16 @@ CREATE TABLE IF NOT EXISTS psicologos (
   endereco TEXT,
   cidade TEXT,
   estado TEXT,
+  plano TEXT DEFAULT 'trial',
+  trial_fim TIMESTAMPTZ DEFAULT NOW() + INTERVAL '14 days',
+  mp_subscription_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migração para bases existentes
+ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS plano TEXT DEFAULT 'trial';
+ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS trial_fim TIMESTAMPTZ DEFAULT NOW() + INTERVAL '14 days';
+ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS mp_subscription_id TEXT;
 
 CREATE TABLE IF NOT EXISTS pacientes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
