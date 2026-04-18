@@ -107,7 +107,7 @@ Data/hora atual: ${agora}`
 
   try {
     const { text } = await generateText({
-      model: anthropic('claude-haiku-4.5'),
+      model: anthropic('claude-haiku-4-5'),
       system: systemPrompt,
       messages: [
         ...history.slice(-10).map((m) => ({ role: m.role, content: m.content })),
