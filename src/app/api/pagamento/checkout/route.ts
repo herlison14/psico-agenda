@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import pool from '@/lib/db'
 
+const PLAN_ID = process.env.MP_PLAN_ID ?? '7bb9bd9a3d1443178bba9a3ae4a6f885'
+
 export async function POST() {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -14,40 +16,36 @@ export async function POST() {
   const { rows } = await pool.query('SELECT email FROM psicologos WHERE id = $1', [session.user.id])
   const email = rows[0]?.email ?? ''
 
-  const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+  // Cria assinatura recorrente (preapproval) vinculada ao plano mensal
+  const res = await fetch('https://api.mercadopago.com/preapproval', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${mpToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      items: [{
-        id: 'psiplanner-pro-mensal',
-        title: 'PsiPlanner Pro — Mensal',
-        description: 'Acesso completo ao PsiPlanner por 30 dias',
-        quantity: 1,
-        unit_price: 49.90,
+      preapproval_plan_id: PLAN_ID,
+      reason: 'PsiPlanner Pro Mensal',
+      external_reference: session.user.id,
+      payer_email: email,
+      back_url: `${baseUrl}/dashboard?pagamento=sucesso`,
+      auto_recurring: {
+        frequency: 1,
+        frequency_type: 'months',
+        transaction_amount: 49.90,
         currency_id: 'BRL',
-      }],
-      payer: { email },
-      back_urls: {
-        success: `${baseUrl}/dashboard?pagamento=sucesso`,
-        failure: `${baseUrl}/planos?pagamento=erro`,
-        pending: `${baseUrl}/planos?pagamento=pendente`,
+        billing_day: 10,
+        billing_day_proportional: true,
       },
-      auto_return: 'approved',
-      notification_url: `${baseUrl}/api/pagamento/webhook`,
-      metadata: { psicologo_id: session.user.id },
-      statement_descriptor: 'PSIPLANNER',
     }),
   })
 
   if (!res.ok) {
     const err = await res.text()
     console.error('[checkout] MP error:', err)
-    return NextResponse.json({ error: 'Erro ao criar preferência de pagamento.' }, { status: 502 })
+    return NextResponse.json({ error: 'Erro ao criar assinatura.' }, { status: 502 })
   }
 
   const data = await res.json()
-  return NextResponse.json({ checkout_url: data.init_point })
+  return NextResponse.json({ checkout_url: data.init_point, subscription_id: data.id })
 }
