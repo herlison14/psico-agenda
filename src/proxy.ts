@@ -12,8 +12,8 @@ export const config = {
   // inside each route handler, so we do NOT include them here. Including /api
   // in the matcher breaks client fetches because the middleware redirects
   // unauthenticated API calls to /login (HTML) instead of returning 401 JSON.
-  // Root `/` e `/planos` são públicos — excluídos do matcher
+  // Root `/`, `/planos` e `/agendar` são públicos — excluídos do matcher
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|planos|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).+)',
+    '/((?!api|_next/static|_next/image|favicon.ico|planos|agendar|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).+)',
   ],
 }

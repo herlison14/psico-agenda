@@ -14,12 +14,13 @@ export const authConfig: NextAuthConfig = {
 
       // Redireciona usuários já logados para o dashboard
       if (isAuthPage) {
-        if (isLoggedIn) return NextResponse.redirect(new URL('/', nextUrl))
+        if (isLoggedIn) return NextResponse.redirect(new URL('/dashboard', nextUrl))
         return true
       }
 
-      // NextAuth e o endpoint público do agente devem sempre passar
+      // NextAuth, agente e agendamento público devem sempre passar
       if (isApiAuth || isAgenteApi) return true
+      if (pathname.startsWith('/agendar')) return true
 
       // Rotas de API sem auth retornam 401 JSON (não redirect)
       if (isApiRoute && !isLoggedIn)

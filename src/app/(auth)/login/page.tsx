@@ -57,7 +57,7 @@ export default function LoginPage() {
 
     // Full-page reload so the session cookie is picked up by the proxy/middleware
     // on the very next request. router.push alone leaves the SSR layer stale.
-    window.location.assign('/')
+    window.location.assign('/dashboard')
   }
 
   return (
