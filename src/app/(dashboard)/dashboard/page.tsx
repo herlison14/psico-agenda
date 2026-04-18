@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { Sessao, Psicologo } from '@/types/psico'
 import { format, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CalendarDays, DollarSign, FileText, Clock, Users, UserX } from 'lucide-react'
+import { CalendarDays, DollarSign, FileText, Clock, Users, UserX, Link2, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 
 async function safeJson<T = unknown>(url: string): Promise<T | null> {
@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [psicologo, setPsicologo] = useState<Psicologo | null>(null)
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+  const [copiado, setCopiado] = useState(false)
 
   useEffect(() => {
     // Espera a sessão carregar antes de buscar dados protegidos
@@ -180,6 +181,34 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Link de agendamento */}
+      {session?.user?.id && (
+        <div className="bg-[#EBF5EF] border border-[#C8E6D4] rounded-2xl p-5 mb-6 flex items-center gap-4">
+          <div className="bg-[#1B3A2F] rounded-xl p-2.5 shrink-0">
+            <Link2 className="w-4 h-4 text-white" strokeWidth={1.75} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[#1B3A2F]">Seu link de agendamento</p>
+            <p className="text-xs text-[#3D5247] truncate mt-0.5">
+              {typeof window !== 'undefined' ? window.location.origin : 'https://www.psiplanner.com.br'}/agendar/{session.user.id}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/agendar/${session.user.id}`
+              navigator.clipboard.writeText(url).then(() => {
+                setCopiado(true)
+                setTimeout(() => setCopiado(false), 2000)
+              })
+            }}
+            className="flex items-center gap-1.5 bg-[#1B3A2F] text-white text-xs font-medium px-3 py-2 rounded-xl hover:bg-[#244D3F] transition-colors shrink-0"
+          >
+            {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copiado ? 'Copiado!' : 'Copiar'}
+          </button>
+        </div>
+      )}
 
       {/* Sessões de hoje */}
       <div className="bg-white rounded-2xl border border-[#E8E3DB] shadow-sm">
