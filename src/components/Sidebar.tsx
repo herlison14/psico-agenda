@@ -19,7 +19,7 @@ import { signOut } from 'next-auth/react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/agenda', label: 'Agenda', icon: CalendarDays },
+  { href: '/agenda', label: 'Agenda', icon: CalendarDays, badge: true },
   { href: '/pacientes', label: 'Pacientes', icon: Users },
   { href: '/recibos', label: 'Recibos', icon: FileText },
   { href: '/financeiro', label: 'Financeiro', icon: DollarSign },
@@ -29,9 +29,31 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [novasSessoes, setNovasSessoes] = useState(0)
 
+  useEffect(() => { setOpen(false) }, [pathname])
+
+  // Quando o usuário abre a agenda, zera o badge
   useEffect(() => {
-    setOpen(false)
+    if (pathname === '/agenda' || pathname.startsWith('/agenda/')) {
+      setNovasSessoes(0)
+    }
+  }, [pathname])
+
+  // Verifica novas sessões a cada 30s
+  useEffect(() => {
+    async function verificar() {
+      try {
+        const res = await fetch('/api/sessoes/novas')
+        if (res.ok) {
+          const data = await res.json()
+          if (!pathname.startsWith('/agenda')) setNovasSessoes(data.count ?? 0)
+        }
+      } catch { /* silencioso */ }
+    }
+    verificar()
+    const interval = setInterval(verificar, 30_000)
+    return () => clearInterval(interval)
   }, [pathname])
 
   async function handleLogout() {
@@ -55,8 +77,9 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-4 py-5 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon, badge }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
+          const showBadge = badge && novasSessoes > 0 && !active
           return (
             <Link
               key={href}
@@ -68,7 +91,12 @@ export default function Sidebar() {
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              {label}
+              <span className="flex-1">{label}</span>
+              {showBadge && (
+                <span className="bg-[#5A9E7C] text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                  {novasSessoes}
+                </span>
+              )}
             </Link>
           )
         })}

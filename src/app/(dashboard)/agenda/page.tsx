@@ -80,6 +80,12 @@ export default function AgendaPage() {
 
   useEffect(() => { loadSessoes() }, [loadSessoes])
 
+  // Auto-refresh a cada 30s para capturar agendamentos feitos pelo link/agente
+  useEffect(() => {
+    const interval = setInterval(() => { loadSessoes() }, 30_000)
+    return () => clearInterval(interval)
+  }, [loadSessoes])
+
   function getSessoesDoDia(dia: Date, hora: number): Sessao[] {
     return sessoes.filter(s => {
       const d = parseISO(s.data_hora)
