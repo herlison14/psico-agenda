@@ -1,24 +1,5 @@
 services:
-  # ── Next.js frontend ──────────────────────────────────────────────────────
-  - type: web
-    name: psiplanner
-    runtime: node
-    region: oregon
-    plan: free
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: node scripts/migrate.js && npm start
-    healthCheckPath: /api/health
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: AUTH_SECRET
-        sync: false
-      - key: PSICOLOGO_ID
-        sync: false
-      - key: AGENTE_API_KEY
-        sync: false
-
-  # ── FastAPI — agente Sofia ─────────────────────────────────────────────────
+  # ── FastAPI — agente July ──────────────────────────────────────────────────
   - type: web
     name: agente-july
     runtime: python
