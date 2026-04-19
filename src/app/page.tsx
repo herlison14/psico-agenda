@@ -2,7 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Leaf, Send, CalendarDays, Users, FileText, DollarSign, Mic2, ChevronRight, CheckCircle } from 'lucide-react'
+import Image from 'next/image'
+import { Leaf, Send, CalendarDays, Users, FileText, DollarSign, Mic2, ChevronRight, CheckCircle, MessageCircle, QrCode } from 'lucide-react'
+
+const AGENTE_WA_NUMBER = process.env.NEXT_PUBLIC_AGENTE_WHATSAPP ?? ''
 
 type Msg = { role: 'user' | 'assistant'; content: string }
 
@@ -71,7 +74,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <span className="inline-block bg-[#EBF5EF] text-[#2D6A52] text-xs font-semibold px-3 py-1.5 rounded-full mb-6 tracking-wide uppercase">
-          14 dias grátis — sem cartão
+          3 dias grátis — sem cartão
         </span>
         <h1 className="text-4xl sm:text-5xl font-bold text-[#1B3A2F] leading-tight mb-5">
           Gestão de agenda para<br />
@@ -194,11 +197,68 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* WhatsApp Agent Section */}
+      {AGENTE_WA_NUMBER && (
+        <section className="max-w-6xl mx-auto px-6 pb-20">
+          <div className="bg-white rounded-3xl border border-[#E8E3DB] shadow-sm overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-0">
+              {/* Left: info */}
+              <div className="p-10 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="bg-[#25D366] rounded-xl p-2">
+                    <MessageCircle className="w-5 h-5 text-white" strokeWidth={1.75} />
+                  </div>
+                  <span className="text-sm font-semibold text-[#25D366] uppercase tracking-wide">WhatsApp</span>
+                </div>
+                <h2 className="text-2xl font-bold text-[#1B3A2F] mb-3">
+                  Fale com a July agora
+                </h2>
+                <p className="text-[#5A7268] mb-6 leading-relaxed">
+                  Seus pacientes agendam consultas diretamente pelo WhatsApp, sem precisar acessar nenhum site. A July cuida de tudo automaticamente.
+                </p>
+                <div className="bg-[#F7F5F0] rounded-2xl px-6 py-4 mb-6 inline-block">
+                  <p className="text-xs text-[#7A8C82] mb-1">Número do agente</p>
+                  <p className="text-xl font-bold text-[#1B3A2F] tracking-wide">
+                    +{AGENTE_WA_NUMBER.replace(/\D/g, '')}
+                  </p>
+                </div>
+                <a
+                  href={`https://wa.me/${AGENTE_WA_NUMBER.replace(/\D/g, '')}?text=Ol%C3%A1%2C+gostaria+de+agendar+uma+consulta`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#1DAA55] transition-colors w-fit text-sm"
+                >
+                  <MessageCircle className="w-4 h-4" strokeWidth={2} />
+                  Abrir no WhatsApp
+                </a>
+              </div>
+
+              {/* Right: QR code */}
+              <div className="bg-[#F7F5F0] flex flex-col items-center justify-center p-10 border-l border-[#E8E3DB]">
+                <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                  <Image
+                    src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`https://wa.me/${AGENTE_WA_NUMBER.replace(/\D/g, '')}?text=Ol%C3%A1%2C+gostaria+de+agendar+uma+consulta`)}&size=180x180&margin=8&color=1B3A2F`}
+                    alt="QR Code WhatsApp"
+                    width={180}
+                    height={180}
+                    unoptimized
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 text-[#7A8C82] text-sm">
+                  <QrCode className="w-4 h-4" />
+                  <span>Escaneie para abrir no WhatsApp</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Pricing teaser */}
       <section className="bg-[#1B3A2F] text-white py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-3">Simples e acessível</h2>
-          <p className="text-[#A8D5BC] mb-8">14 dias grátis, depois apenas R$ 49,90/mês. Cancele quando quiser.</p>
+          <p className="text-[#A8D5BC] mb-8">3 dias grátis, depois apenas R$ 49,90/mês. Cancele quando quiser.</p>
           <div className="grid sm:grid-cols-3 gap-4 mb-8 text-left">
             {['Agenda ilimitada', 'Pacientes ilimitados', 'Recibos em PDF', 'Agente WhatsApp (July)', 'Prontuário por IA', 'Exportação Carnê-Leão'].map(f => (
               <div key={f} className="flex items-center gap-2 text-sm text-[#D4EDE0]">

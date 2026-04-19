@@ -13,7 +13,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https://api.qrserver.com",
       "font-src 'self' data:",
       "connect-src 'self'",
       "frame-ancestors 'none'",
@@ -24,8 +24,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
-  headers() {
-    return Promise.resolve([{ source: '/:path*', headers: securityHeaders }])
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }]
+  },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.qrserver.com', pathname: '/v1/create-qr-code/**' },
+    ],
   },
 };
 

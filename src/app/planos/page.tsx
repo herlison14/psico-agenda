@@ -62,7 +62,7 @@ function PlanosContent() {
 
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-[#1B3A2F] mb-3">Planos PsiPlanner</h1>
-          <p className="text-[#5A7268]">14 dias grátis para testar. Sem cartão de crédito.</p>
+          <p className="text-[#5A7268]">3 dias grátis para testar. Sem cartão de crédito.</p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -70,7 +70,7 @@ function PlanosContent() {
           <div className="bg-white rounded-2xl border border-[#E8E3DB] p-8 shadow-sm">
             <p className="text-sm font-semibold text-[#7A8C82] uppercase tracking-wide mb-2">Trial</p>
             <p className="text-4xl font-bold text-[#1B3A2F] mb-1">Grátis</p>
-            <p className="text-sm text-[#7A8C82] mb-6">14 dias · sem cartão</p>
+            <p className="text-sm text-[#7A8C82] mb-6">3 dias · sem cartão</p>
             <ul className="space-y-2.5 mb-8">
               {RECURSOS.map(r => (
                 <li key={r} className="flex items-center gap-2.5 text-sm text-[#3D5247]">
