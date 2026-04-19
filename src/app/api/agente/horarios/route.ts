@@ -39,14 +39,14 @@ export async function GET(req: NextRequest) {
   for (let d = 1; d <= dias; d++) {
     const dia = new Date(agora)
     dia.setDate(dia.getDate() + d)
-    dia.setHours(0, 0, 0, 0)
+    dia.setUTCHours(3, 0, 0, 0) // meia-noite BRT (UTC-3) = 03:00 UTC
 
-    const diaSemana = dia.getDay()
+    const diaSemana = dia.getUTCDay()
     if (diaSemana === 0 || diaSemana === 6) continue // pula fim de semana
 
     for (const hora of HORARIOS_PADRAO) {
       const slot = new Date(dia)
-      slot.setHours(hora, 0, 0, 0)
+      slot.setUTCHours(hora + 3, 0, 0, 0) // hora BRT → UTC
 
       if (!ocupados.has(slot.toISOString())) {
         slots.push({
