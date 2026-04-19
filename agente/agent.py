@@ -80,7 +80,7 @@ async def processar(
     notificar_tool = criar_notificar_psicologa(disable_agent_fn)
 
     runner = _client.beta.messages.tool_runner(
-        model="claude-opus-4-6",
+        model="claude-haiku-4-5-20251001",
         max_tokens=1024,
         system=system,
         tools=[

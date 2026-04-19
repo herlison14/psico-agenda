@@ -58,23 +58,29 @@ async def agendar_sessao(
         observacoes: Observações opcionais sobre a sessão
     """
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        payload = {
+            "psicologo_id": PSICOLOGO_ID,
+            "paciente_id": paciente_id,
+            "data_hora": data_hora,
+            "valor": valor,
+            "observacoes": observacoes or None,
+        }
+        print(f"[agendar_sessao] POST payload: {payload}")
+        async with httpx.AsyncClient(timeout=15) as client:
             r = await client.post(
                 f"{PSICO_API_URL}/api/agente/sessao",
                 headers=_headers(),
-                json={
-                    "psicologo_id": PSICOLOGO_ID,
-                    "paciente_id": paciente_id,
-                    "data_hora": data_hora,
-                    "valor": valor,
-                    "observacoes": observacoes or None,
-                },
+                json=payload,
             )
+            print(f"[agendar_sessao] resposta: {r.status_code} {r.text[:300]}")
             r.raise_for_status()
             return r.text
     except httpx.HTTPStatusError as e:
-        return json.dumps({"erro": f"API retornou {e.response.status_code}", "detalhe": e.response.text[:200]})
+        erro = {"erro": f"API retornou {e.response.status_code}", "detalhe": e.response.text[:300]}
+        print(f"[agendar_sessao] ERRO HTTP: {erro}")
+        return json.dumps(erro)
     except Exception as e:
+        print(f"[agendar_sessao] ERRO: {e}")
         return json.dumps({"erro": str(e)})
 
 

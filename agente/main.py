@@ -18,7 +18,7 @@ import twilio_wa
 PSICO_API_URL = os.getenv("PSICO_API_URL", "")
 AGENTE_API_KEY = os.getenv("AGENTE_API_KEY", "")
 PSICOLOGO_ID = os.getenv("PSICOLOGO_ID", "")
-BUFFER_DELAY = float(os.getenv("BUFFER_DELAY", "3"))
+BUFFER_DELAY = float(os.getenv("BUFFER_DELAY", "2"))
 
 PSICO_HEADERS = {
     "Authorization": f"Bearer {AGENTE_API_KEY}",
@@ -161,6 +161,11 @@ app = FastAPI(
 @app.get("/health")
 async def health():
     return {"status": "ok", "agente": "July", "whatsapp": "WAHA"}
+
+
+@app.get("/ping")
+async def ping():
+    return "pong"
 
 
 @app.post("/webhook")
