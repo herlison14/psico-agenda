@@ -10,8 +10,9 @@ from fastapi import FastAPI, Request, Response
 load_dotenv()
 
 from agent import processar
-from waha import enviar_resposta_humanizada, enviar_texto
+from waha import enviar_resposta_humanizada as waha_resposta, enviar_texto as waha_texto
 from telegram import enviar_mensagem, enviar_digitando, registrar_webhook
+import meta as meta_api
 
 PSICO_API_URL = os.getenv("PSICO_API_URL", "")
 AGENTE_API_KEY = os.getenv("AGENTE_API_KEY", "")
@@ -313,6 +314,109 @@ async def setup_telegram(request: Request):
     base_url = str(request.base_url).rstrip("/")
     result = await registrar_webhook(base_url)
     return result
+
+
+META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "")
+
+
+@app.get("/webhook/meta")
+async def webhook_meta_verify(request: Request):
+    """Verificação do webhook pela Meta (challenge-response)."""
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+    if mode == "subscribe" and token == META_VERIFY_TOKEN and META_VERIFY_TOKEN:
+        return Response(content=challenge, media_type="text/plain")
+    return Response(status_code=403)
+
+
+@app.post("/webhook/meta")
+async def webhook_meta(request: Request):
+    """Recebe mensagens do WhatsApp via Meta Cloud API."""
+    try:
+        body = await request.json()
+    except Exception:
+        return Response(status_code=400)
+
+    if body.get("object") != "whatsapp_business_account":
+        return Response(status_code=200)
+
+    for entry in body.get("entry", []):
+        for change in entry.get("changes", []):
+            if change.get("field") != "messages":
+                continue
+            value = change.get("value", {})
+            messages = value.get("messages", [])
+            contacts = value.get("contacts", [])
+
+            for msg in messages:
+                msg_type = msg.get("type", "")
+                phone = msg.get("from", "")
+                message_id = msg.get("id", "")
+
+                if not phone:
+                    continue
+
+                # Marca como lido imediatamente
+                asyncio.create_task(meta_api.marcar_lido(message_id))
+
+                if not agente_ativo(phone):
+                    continue
+
+                nome = contacts[0].get("profile", {}).get("name", "Paciente") if contacts else "Paciente"
+
+                if msg_type == "text":
+                    texto = msg.get("text", {}).get("body", "").strip()
+                    if texto:
+                        adicionar_ao_buffer_meta(phone, nome, texto)
+
+                elif msg_type == "audio":
+                    adicionar_ao_buffer_meta(phone, nome, "[áudio recebido — transcrição indisponível]")
+
+                elif msg_type == "image":
+                    caption = msg.get("image", {}).get("caption", "")
+                    adicionar_ao_buffer_meta(phone, nome, f"[imagem recebida{': ' + caption if caption else ''}]")
+
+    return Response(status_code=200)
+
+
+def adicionar_ao_buffer_meta(phone: str, nome: str, texto: str):
+    if phone not in _buffers:
+        _buffers[phone] = []
+    _buffers[phone].append({"type": "text", "content": texto})
+    tarefa = _buffer_tasks.get(phone)
+    if tarefa is None or tarefa.done():
+        _buffer_tasks[phone] = asyncio.create_task(_processar_buffer_meta(phone, nome))
+
+
+async def _processar_buffer_meta(phone: str, nome: str):
+    await asyncio.sleep(BUFFER_DELAY)
+
+    mensagens = _buffers.pop(phone, [])
+    if not mensagens or not agente_ativo(phone):
+        return
+
+    texto_consolidado = "\n".join(f"[{m['type'].upper()}]: {m['content']}" for m in mensagens)
+
+    try:
+        paciente = await obter_paciente(phone, nome)
+        paciente_id = paciente["id"] if paciente else None
+        paciente_nome = paciente["nome"] if paciente else nome
+
+        resposta = await processar(
+            phone=phone,
+            paciente_id=paciente_id,
+            paciente_nome=paciente_nome,
+            mensagem_usuario=texto_consolidado,
+            disable_agent_fn=_disable_agent_fn,
+        )
+
+        await meta_api.enviar_resposta_humanizada(phone, resposta)
+
+    except Exception as e:
+        import traceback
+        print(f"[Erro Meta] {e}\n{traceback.format_exc()}")
+        await meta_api.enviar_texto(phone, "Desculpe, ocorreu um erro. Tente novamente em instantes.")
 
 
 if __name__ == "__main__":
