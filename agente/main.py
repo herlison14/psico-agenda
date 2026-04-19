@@ -13,6 +13,7 @@ from agent import processar
 from waha import enviar_resposta_humanizada as waha_resposta, enviar_texto as waha_texto
 from telegram import enviar_mensagem, enviar_digitando, registrar_webhook
 import meta as meta_api
+import twilio_wa
 
 PSICO_API_URL = os.getenv("PSICO_API_URL", "")
 AGENTE_API_KEY = os.getenv("AGENTE_API_KEY", "")
@@ -417,6 +418,81 @@ async def _processar_buffer_meta(phone: str, nome: str):
         import traceback
         print(f"[Erro Meta] {e}\n{traceback.format_exc()}")
         await meta_api.enviar_texto(phone, "Desculpe, ocorreu um erro. Tente novamente em instantes.")
+
+
+@app.post("/webhook/twilio")
+async def webhook_twilio(request: Request):
+    """Recebe mensagens do WhatsApp via Twilio."""
+    try:
+        form = await request.form()
+    except Exception:
+        return Response(status_code=400)
+
+    phone = str(form.get("From", ""))       # ex: whatsapp:+5521999999999
+    body = str(form.get("Body", "")).strip()
+    nome = str(form.get("ProfileName", "Paciente")) or "Paciente"
+    msg_type = str(form.get("MessageType", "text"))
+
+    if not phone:
+        return Response(status_code=200)
+
+    # Normaliza: remove prefixo whatsapp: para uso interno
+    phone_key = phone.replace("whatsapp:", "")
+
+    if not agente_ativo(phone_key):
+        return Response(status_code=200)
+
+    if msg_type == "text" and body:
+        adicionar_ao_buffer_twilio(phone_key, phone, nome, body)
+    elif msg_type == "audio":
+        adicionar_ao_buffer_twilio(phone_key, phone, nome, "[áudio recebido — transcrição indisponível]")
+    elif msg_type == "image":
+        caption = str(form.get("Body", ""))
+        adicionar_ao_buffer_twilio(phone_key, phone, nome, f"[imagem recebida{': ' + caption if caption else ''}]")
+
+    # Twilio espera resposta vazia (reply via API, não via TwiML)
+    return Response(status_code=200)
+
+
+def adicionar_ao_buffer_twilio(phone_key: str, phone_full: str, nome: str, texto: str):
+    if phone_key not in _buffers:
+        _buffers[phone_key] = []
+    _buffers[phone_key].append({"type": "text", "content": texto})
+    tarefa = _buffer_tasks.get(phone_key)
+    if tarefa is None or tarefa.done():
+        _buffer_tasks[phone_key] = asyncio.create_task(
+            _processar_buffer_twilio(phone_key, phone_full, nome)
+        )
+
+
+async def _processar_buffer_twilio(phone_key: str, phone_full: str, nome: str):
+    await asyncio.sleep(BUFFER_DELAY)
+
+    mensagens = _buffers.pop(phone_key, [])
+    if not mensagens or not agente_ativo(phone_key):
+        return
+
+    texto_consolidado = "\n".join(f"[{m['type'].upper()}]: {m['content']}" for m in mensagens)
+
+    try:
+        paciente = await obter_paciente(phone_key, nome)
+        paciente_id = paciente["id"] if paciente else None
+        paciente_nome = paciente["nome"] if paciente else nome
+
+        resposta = await processar(
+            phone=phone_key,
+            paciente_id=paciente_id,
+            paciente_nome=paciente_nome,
+            mensagem_usuario=texto_consolidado,
+            disable_agent_fn=_disable_agent_fn,
+        )
+
+        await twilio_wa.enviar_resposta_humanizada(phone_full, resposta)
+
+    except Exception as e:
+        import traceback
+        print(f"[Erro Twilio] {e}\n{traceback.format_exc()}")
+        await twilio_wa.enviar_texto(phone_full, "Desculpe, ocorreu um erro. Tente novamente em instantes.")
 
 
 if __name__ == "__main__":
