@@ -3,6 +3,7 @@ import { generateText, tool, stepCountIs } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { z } from 'zod'
 import pool from '@/lib/db'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const HORARIOS_PADRAO = [8, 9, 10, 11, 14, 15, 16, 17]
 
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
 
   if (!psicologo_id || !message?.trim() || !paciente_phone)
     return NextResponse.json({ error: 'psicologo_id, paciente_phone e message são obrigatórios.' }, { status: 400 })
+
+  // 20 mensagens por IP a cada 15 minutos
+  const ip = getClientIp(req)
+  if (!checkRateLimit(`chat:${ip}`, 20)) {
+    return NextResponse.json({ error: 'Muitas mensagens. Aguarde alguns minutos.' }, { status: 429 })
+  }
 
   // Busca psicólogo
   const { rows: psicRows } = await pool.query(

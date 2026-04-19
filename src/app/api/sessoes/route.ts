@@ -89,6 +89,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const { rows: pacCheck } = await pool.query(
+      'SELECT id FROM pacientes WHERE id = $1 AND psicologo_id = $2',
+      [paciente_id, session.user.id]
+    )
+    if (pacCheck.length === 0)
+      return NextResponse.json({ error: 'Paciente não encontrado.' }, { status: 403 })
+
     const { rows } = await pool.query(
       `INSERT INTO sessoes (psicologo_id, paciente_id, data_hora, duracao_min, valor, observacoes, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7)

@@ -43,6 +43,24 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Garante que paciente pertence ao psicólogo logado
+    const { rows: pacCheck } = await pool.query(
+      'SELECT id FROM pacientes WHERE id = $1 AND psicologo_id = $2',
+      [paciente_id, session.user.id]
+    )
+    if (pacCheck.length === 0)
+      return NextResponse.json({ error: 'Paciente não encontrado.' }, { status: 403 })
+
+    // Garante que sessão (se fornecida) pertence ao psicólogo logado
+    if (sessao_id) {
+      const { rows: sesCheck } = await pool.query(
+        'SELECT id FROM sessoes WHERE id = $1 AND psicologo_id = $2',
+        [sessao_id, session.user.id]
+      )
+      if (sesCheck.length === 0)
+        return NextResponse.json({ error: 'Sessão não encontrada.' }, { status: 403 })
+    }
+
     const { rows: last } = await pool.query(
       'SELECT COALESCE(MAX(numero), 0) + 1 as proximo FROM recibos WHERE psicologo_id = $1',
       [session.user.id]

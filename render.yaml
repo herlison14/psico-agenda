@@ -12,7 +12,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: AUTH_SECRET
-        generateValue: true
+        sync: false
       - key: PSICOLOGO_ID
         sync: false
       - key: AGENTE_API_KEY
