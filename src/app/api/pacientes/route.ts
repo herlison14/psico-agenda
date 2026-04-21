@@ -3,18 +3,34 @@ import pool from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { isDemoMode, DEMO_PACIENTES } from '@/lib/mockData'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   if (isDemoMode()) return NextResponse.json(DEMO_PACIENTES)
 
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { searchParams } = req.nextUrl
+  const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '100'), 1), 200)
+  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'), 0)
+  const busca = searchParams.get('busca')?.trim() ?? ''
+
   try {
+    const values: unknown[] = [session.user.id]
+    let where = 'WHERE psicologo_id = $1 AND deleted_at IS NULL'
+    if (busca) {
+      values.push(`%${busca}%`)
+      where += ` AND (nome ILIKE $${values.length} OR telefone ILIKE $${values.length} OR email ILIKE $${values.length})`
+    }
+    values.push(limit, offset)
     const { rows } = await pool.query(
-      'SELECT * FROM pacientes WHERE psicologo_id = $1 ORDER BY nome',
-      [session.user.id]
+      `SELECT * FROM pacientes ${where} ORDER BY nome LIMIT $${values.length - 1} OFFSET $${values.length}`,
+      values
     )
-    return NextResponse.json(rows)
+    const { rows: total } = await pool.query(
+      `SELECT COUNT(*) FROM pacientes ${where.replace(/ LIMIT \$\d+ OFFSET \$\d+/, '')}`,
+      values.slice(0, -2)
+    )
+    return NextResponse.json({ data: rows, total: parseInt(total[0].count), limit, offset })
   } catch (err) {
     console.error('[GET /api/pacientes]', err)
     return NextResponse.json({ error: 'Erro ao consultar pacientes.' }, { status: 500 })

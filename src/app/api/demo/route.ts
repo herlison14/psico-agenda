@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const SYSTEM = `Você é a July, assistente virtual de agendamento — demonstração da PsiPlanner.
 
@@ -18,6 +19,11 @@ Responda em português brasileiro.
 Ao final de interações de agendamento, lembre discretamente: "*(Isso é uma demonstração — na versão real, os agendamentos são registrados automaticamente na agenda do PsiPlanner)*"`
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  if (!checkRateLimit(`demo:${ip}`, 15)) {
+    return NextResponse.json({ error: 'Muitas mensagens. Aguarde alguns minutos.' }, { status: 429 })
+  }
+
   const { message, history = [] } = await req.json().catch(() => ({ message: '', history: [] }))
   if (!message?.trim()) return NextResponse.json({ error: 'Mensagem vazia.' }, { status: 400 })
 

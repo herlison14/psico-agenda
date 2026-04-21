@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
     const schema = readFileSync(join(process.cwd(), 'SCHEMA.sql'), 'utf8')
     await pool.query(schema)
 
+    const migration2 = readFileSync(join(process.cwd(), 'migration_v2_soft_delete.sql'), 'utf8')
+    await pool.query(migration2)
+
     const { rows } = await pool.query('SELECT COUNT(*) AS n FROM psicologos')
     let seeded = false
     if (parseInt(rows[0].n, 10) === 0) {
@@ -20,7 +23,7 @@ export async function POST(req: NextRequest) {
       seeded = true
     }
 
-    return NextResponse.json({ ok: true, seeded })
+    return NextResponse.json({ ok: true, seeded, migrations: ['v1-schema', 'v2-soft-delete'] })
   } catch (err) {
     console.error('[migrate]', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })

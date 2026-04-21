@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { Leaf, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -116,14 +117,21 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#3D5247] mb-1.5">Senha</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-[#3D5247]">Senha</label>
+                {modo === 'login' && (
+                  <Link href="/recuperar-senha" className="text-xs text-[#2D6A52] hover:underline">
+                    Esqueci minha senha
+                  </Link>
+                )}
+              </div>
               <input
                 type="password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
                 placeholder="••••••••"
-                minLength={6}
+                minLength={8}
                 className="w-full px-4 py-3 bg-white border border-[#D4CFC6] rounded-xl focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] transition-all"
               />
             </div>

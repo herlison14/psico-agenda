@@ -5,7 +5,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  await params
+  const { id: sessaoId } = await params
+
+  // Verifica que a sessão pertence ao psicólogo autenticado
+  const { rows: sessaoRows } = await (await import('@/lib/db')).default.query(
+    'SELECT id FROM sessoes WHERE id = $1 AND psicologo_id = $2',
+    [sessaoId, session.user.id]
+  )
+  if (sessaoRows.length === 0) return NextResponse.json({ error: 'Sessão não encontrada.' }, { status: 404 })
 
   const formData = await req.formData()
   const audioFile = formData.get('audio') as File | null
@@ -65,10 +72,21 @@ Formato obrigatório:
     }),
   })
 
-  if (!claudeRes.ok) return NextResponse.json({ transcricao, prontuario: transcricao })
+  if (!claudeRes.ok) {
+    await (await import('@/lib/db')).default.query(
+      'UPDATE sessoes SET notas_clinicas = $1 WHERE id = $2 AND psicologo_id = $3',
+      [transcricao, sessaoId, session.user.id]
+    )
+    return NextResponse.json({ transcricao, prontuario: transcricao })
+  }
 
   const claudeData = await claudeRes.json()
   const prontuario = claudeData.content?.[0]?.text ?? transcricao
+
+  await (await import('@/lib/db')).default.query(
+    'UPDATE sessoes SET notas_clinicas = $1 WHERE id = $2 AND psicologo_id = $3',
+    [prontuario, sessaoId, session.user.id]
+  )
 
   return NextResponse.json({ transcricao, prontuario })
 }

@@ -3,6 +3,29 @@ import pool from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { isDemoMode, DEMO_SESSOES } from '@/lib/mockData'
 
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  if (isDemoMode()) return NextResponse.json({ ok: true })
+
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE sessoes SET deleted_at = NOW(), status = 'cancelado'
+       WHERE id = $1 AND psicologo_id = $2 AND deleted_at IS NULL
+       RETURNING id`,
+      [id, session.user.id]
+    )
+    if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[DELETE /api/sessoes/[id]]', err)
+    return NextResponse.json({ error: 'Erro ao remover sessão.' }, { status: 500 })
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()

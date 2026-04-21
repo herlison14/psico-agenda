@@ -1,34 +1,33 @@
 -- =====================================================================
--- SEED.sql — Dados de teste para PsiPlanner (Railway PostgreSQL)
+-- SEED.sql — Dados de teste para PsiPlanner
 -- =====================================================================
--- Usuário de teste:
---   email:    herlison14@gmail.com
---   senha:    123456
---   hash gerado com bcryptjs (mesmo lib usado em src/auth.ts), rounds=10
+-- ATENÇÃO: Substitua SEU_EMAIL e gere um hash seguro antes de rodar.
+-- Para gerar hash: node -e "const b=require('bcryptjs');b.hash('SUA_SENHA',10).then(console.log)"
 --
--- Pré-requisitos: SCHEMA.sql já executado (extension pgcrypto + tabelas).
+-- Pré-requisitos: SCHEMA.sql já executado.
 -- Execução: idempotente (ON CONFLICT / WHERE NOT EXISTS).
 -- =====================================================================
 
 BEGIN;
 
 -- ---------------------------------------------------------------------
--- 1) PSICÓLOGO de teste
+-- 1) PSICÓLOGO de teste — SUBSTITUA os valores antes de rodar
 -- ---------------------------------------------------------------------
+-- Substitua SEU@EMAIL.COM e gere um hash bcrypt para a senha desejada.
+-- Nunca commite credenciais reais neste arquivo.
 INSERT INTO psicologos (email, password_hash, nome, crp, cpf, telefone, cidade, estado)
 VALUES (
-  'herlison14@gmail.com',
-  '$2a$10$.neUaHlOOAAL0NWZMTz4E.VXOGX87LoJy4MwvotvKr.Xcc/eWwyyy', -- "123456"
-  'Herlison (Teste)',
-  'CRP 05/99999',
+  'teste@psiplanner.local',
+  '$2a$10$SUBSTITUA_ESTE_HASH_POR_UM_GERADO_LOCALMENTE_COM_BCRYPT',
+  'Psicólogo Teste',
+  'CRP 00/00000',
   '000.000.000-00',
-  '5521997927927',
+  '(00) 00000-0000',
   'Rio de Janeiro',
   'RJ'
 )
 ON CONFLICT (email) DO UPDATE
-SET password_hash = EXCLUDED.password_hash,
-    nome          = COALESCE(psicologos.nome, EXCLUDED.nome);
+SET nome = COALESCE(psicologos.nome, EXCLUDED.nome);
 
 -- ---------------------------------------------------------------------
 -- 2) PACIENTES de exemplo (2)

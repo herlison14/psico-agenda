@@ -26,6 +26,10 @@ function validarAssinaturaMP(req: NextRequest, rawBody: string): boolean {
   const v1 = parts['v1']
   if (!ts || !v1) return false
 
+  // Rejeita notificações com timestamp maior que 5 minutos (replay attack)
+  const age = Date.now() - Number(ts) * 1000
+  if (age > 5 * 60 * 1000 || age < -30_000) return false
+
   const manifest = `id:${notificationId};request-date:${ts};`
   const expected = createHmac('sha256', secret).update(manifest).digest('hex')
 

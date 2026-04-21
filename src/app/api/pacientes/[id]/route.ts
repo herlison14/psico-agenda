@@ -46,7 +46,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { rows } = await pool.query(
       `UPDATE pacientes
        SET nome=$1, cpf=$2, email=$3, telefone=$4, valor_sessao=$5, ativo=$6
-       WHERE id=$7 AND psicologo_id=$8
+       WHERE id=$7 AND psicologo_id=$8 AND deleted_at IS NULL
        RETURNING *`,
       [nome, cpf || null, email || null, telefone || null, valor_sessao, ativo, id, session.user.id]
     )
@@ -55,5 +55,28 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (err) {
     console.error('[PUT /api/pacientes/[id]]', err)
     return NextResponse.json({ error: 'Erro ao atualizar paciente.' }, { status: 500 })
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  if (isDemoMode()) return NextResponse.json({ ok: true })
+
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE pacientes SET deleted_at = NOW(), ativo = FALSE
+       WHERE id = $1 AND psicologo_id = $2 AND deleted_at IS NULL
+       RETURNING id`,
+      [id, session.user.id]
+    )
+    if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[DELETE /api/pacientes/[id]]', err)
+    return NextResponse.json({ error: 'Erro ao remover paciente.' }, { status: 500 })
   }
 }
