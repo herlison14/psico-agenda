@@ -93,8 +93,8 @@ export default function DashboardPage() {
   }, [session, status])
 
   const statusColor: Record<string, string> = {
-    agendado: 'bg-[#E8F4FF] text-[#2563EB]',
-    realizado: 'bg-[#EBF5EF] text-[#2D6A52]',
+    agendado: 'bg-[#eff6ff] text-[#2563eb]',
+    realizado: 'bg-green-50 text-green-700',
     cancelado: 'bg-red-50 text-red-600',
   }
 
@@ -107,7 +107,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#E8E3DB] border-t-[#5A9E7C]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#e2e8f0] border-t-[#3b82f6]" />
       </div>
     )
   }
@@ -121,76 +121,76 @@ export default function DashboardPage() {
       )}
       <div className="mb-8">
         <h1
-          className="text-2xl font-semibold text-[#1C2B22]"
+          className="text-2xl font-semibold text-[#0f172a]"
           style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}
         >
           Bom dia{psicologo?.nome ? `, ${psicologo.nome.split(' ')[0]}` : ''}
         </h1>
-        <p className="text-[#7A8C82] mt-1 text-sm">
+        <p className="text-[#64748b] mt-1 text-sm">
           {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
         </p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white rounded-2xl border border-[#E8E3DB] p-5 flex items-center gap-4 shadow-sm">
-          <div className="bg-[#EBF5EF] rounded-xl p-3">
-            <CalendarDays className="w-5 h-5 text-[#2D6A52]" strokeWidth={1.75} />
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 flex items-center gap-4 shadow-sm">
+          <div className="bg-[#eff6ff] rounded-xl p-3">
+            <CalendarDays className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs text-[#7A8C82] font-medium uppercase tracking-wide">Sessões hoje</p>
-            <p className="text-2xl font-bold text-[#1C2B22] mt-0.5">{sessoesHoje.length}</p>
+            <p className="text-xs text-[#64748b] font-medium uppercase tracking-wide">Sessões hoje</p>
+            <p className="text-2xl font-bold text-[#0f172a] mt-0.5">{sessoesHoje.length}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E8E3DB] p-5 flex items-center gap-4 shadow-sm">
-          <div className="bg-[#F0F9F4] rounded-xl p-3">
-            <DollarSign className="w-5 h-5 text-[#5A9E7C]" strokeWidth={1.75} />
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 flex items-center gap-4 shadow-sm">
+          <div className="bg-[#eff6ff] rounded-xl p-3">
+            <DollarSign className="w-5 h-5 text-[#3b82f6]" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs text-[#7A8C82] font-medium uppercase tracking-wide">Receita do mês</p>
-            <p className="text-2xl font-bold text-[#1C2B22] mt-0.5">
+            <p className="text-xs text-[#64748b] font-medium uppercase tracking-wide">Receita do mês</p>
+            <p className="text-2xl font-bold text-[#0f172a] mt-0.5">
               {receitaMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E8E3DB] p-5 flex items-center gap-4 shadow-sm">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 flex items-center gap-4 shadow-sm">
           <div className="bg-[#F5F0EB] rounded-xl p-3">
             <FileText className="w-5 h-5 text-[#C4956A]" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs text-[#7A8C82] font-medium uppercase tracking-wide">Recibos emitidos</p>
-            <p className="text-2xl font-bold text-[#1C2B22] mt-0.5">{recibosCount}</p>
+            <p className="text-xs text-[#64748b] font-medium uppercase tracking-wide">Recibos emitidos</p>
+            <p className="text-2xl font-bold text-[#0f172a] mt-0.5">{recibosCount}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E8E3DB] p-5 flex items-center gap-4 shadow-sm">
-          <div className="bg-[#EBF5EF] rounded-xl p-3">
-            <Users className="w-5 h-5 text-[#2D6A52]" strokeWidth={1.75} />
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 flex items-center gap-4 shadow-sm">
+          <div className="bg-[#eff6ff] rounded-xl p-3">
+            <Users className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs text-[#7A8C82] font-medium uppercase tracking-wide">Pacientes ativos</p>
-            <p className="text-2xl font-bold text-[#1C2B22] mt-0.5">{pacientesAtivos}</p>
+            <p className="text-xs text-[#64748b] font-medium uppercase tracking-wide">Pacientes ativos</p>
+            <p className="text-2xl font-bold text-[#0f172a] mt-0.5">{pacientesAtivos}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E8E3DB] p-5 flex items-center gap-4 shadow-sm">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 flex items-center gap-4 shadow-sm">
           <div className="bg-orange-50 rounded-xl p-3">
             <UserX className="w-5 h-5 text-orange-500" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs text-[#7A8C82] font-medium uppercase tracking-wide">Faltas no mês</p>
-            <p className="text-2xl font-bold text-[#1C2B22] mt-0.5">{faltasMes}</p>
+            <p className="text-xs text-[#64748b] font-medium uppercase tracking-wide">Faltas no mês</p>
+            <p className="text-2xl font-bold text-[#0f172a] mt-0.5">{faltasMes}</p>
           </div>
         </div>
       </div>
 
       {/* Link de agendamento */}
       {session?.user?.id && (
-        <div className="bg-[#EBF5EF] border border-[#C8E6D4] rounded-2xl p-5 mb-6 flex items-center gap-4">
-          <div className="bg-[#1B3A2F] rounded-xl p-2.5 shrink-0">
+        <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-2xl p-5 mb-6 flex items-center gap-4">
+          <div className="bg-[#1e3a8a] rounded-xl p-2.5 shrink-0">
             <Link2 className="w-4 h-4 text-white" strokeWidth={1.75} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[#1B3A2F]">Seu link de agendamento</p>
-            <p className="text-xs text-[#3D5247] truncate mt-0.5">
+            <p className="text-sm font-medium text-[#1e3a8a]">Seu link de agendamento</p>
+            <p className="text-xs text-[#334155] truncate mt-0.5">
               {typeof window !== 'undefined' ? window.location.origin : 'https://www.psiplanner.com.br'}/agendar/{session.user.id}
             </p>
           </div>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                 setTimeout(() => setCopiado(false), 2000)
               })
             }}
-            className="flex items-center gap-1.5 bg-[#1B3A2F] text-white text-xs font-medium px-3 py-2 rounded-xl hover:bg-[#244D3F] transition-colors shrink-0"
+            className="flex items-center gap-1.5 bg-[#1e3a8a] text-white text-xs font-medium px-3 py-2 rounded-xl hover:bg-[#1d4ed8] transition-colors shrink-0"
           >
             {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copiado ? 'Copiado!' : 'Copiar'}
@@ -211,30 +211,30 @@ export default function DashboardPage() {
       )}
 
       {/* Sessões de hoje */}
-      <div className="bg-white rounded-2xl border border-[#E8E3DB] shadow-sm">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EDE7]">
-          <h2 className="font-semibold text-[#1C2B22]">Sessões de hoje</h2>
-          <Link href="/agenda" className="text-sm text-[#2D6A52] font-medium hover:underline">
+      <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f1f5f9]">
+          <h2 className="font-semibold text-[#0f172a]">Sessões de hoje</h2>
+          <Link href="/agenda" className="text-sm text-[#2563eb] font-medium hover:underline">
             Ver agenda completa →
           </Link>
         </div>
         {sessoesHoje.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-14 text-[#A8BFB2]">
+          <div className="flex flex-col items-center justify-center py-14 text-[#94a3b8]">
             <CalendarDays className="w-10 h-10 mb-3 opacity-40" strokeWidth={1.5} />
             <p className="text-sm">Nenhuma sessão agendada para hoje</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#F0EDE7]">
+          <ul className="divide-y divide-[#f1f5f9]">
             {sessoesHoje.map((s) => (
               <li key={s.id} className="flex items-center gap-4 px-6 py-4">
-                <div className="bg-[#EBF5EF] rounded-xl p-2">
-                  <Clock className="w-4 h-4 text-[#2D6A52]" strokeWidth={1.75} />
+                <div className="bg-[#eff6ff] rounded-xl p-2">
+                  <Clock className="w-4 h-4 text-[#2563eb]" strokeWidth={1.75} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-[#1C2B22] truncate">
+                  <p className="font-medium text-[#0f172a] truncate">
                     {s.paciente?.nome ?? 'Paciente'}
                   </p>
-                  <p className="text-sm text-[#7A8C82]">
+                  <p className="text-sm text-[#64748b]">
                     {format(new Date(s.data_hora), 'HH:mm')} · {s.duracao_min} min
                   </p>
                 </div>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColor[s.status]}`}>
                     {statusLabel[s.status]}
                   </span>
-                  <span className="text-sm font-semibold text-[#1C2B22]">
+                  <span className="text-sm font-semibold text-[#0f172a]">
                     {Number(s.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                 </div>

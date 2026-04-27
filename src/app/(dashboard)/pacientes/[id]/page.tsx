@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 
 const STATUS_BADGE: Record<string, string> = {
-  realizado: 'bg-[#EBF5EF] text-[#2D6A52]',
+  realizado: 'bg-[#eff6ff] text-[#2563eb]',
   agendado: 'bg-blue-50 text-blue-700',
   cancelado: 'bg-red-50 text-red-700',
   faltou: 'bg-orange-50 text-orange-700',
@@ -94,48 +94,48 @@ export default function HistoricoPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-[#EBF5EF] rounded-xl text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
+          className="p-2 hover:bg-[#eff6ff] rounded-xl text-[#64748b] hover:text-[#2563eb] transition-colors"
         >
           <ArrowLeft className="w-5 h-5" strokeWidth={1.75} />
         </button>
-        <div className="bg-[#EBF5EF] rounded-xl p-2.5">
-          <BookOpen className="w-5 h-5 text-[#2D6A52]" strokeWidth={1.75} />
+        <div className="bg-[#eff6ff] rounded-xl p-2.5">
+          <BookOpen className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-[#1C2B22]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
+          <h1 className="text-2xl font-semibold text-[#0f172a]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
             Histórico Clínico
           </h1>
           {paciente && (
-            <p className="text-sm text-[#7A8C82]">{paciente.nome}</p>
+            <p className="text-sm text-[#64748b]">{paciente.nome}</p>
           )}
         </div>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#E8E3DB] border-t-[#5A9E7C]" />
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#e2e8f0] border-t-[#3b82f6]" />
         </div>
       ) : (
         <>
           {/* Resumo */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-2xl border border-[#E8E3DB] p-4 text-center">
-              <p className="text-2xl font-bold text-[#1C2B22]">{sessoes.length}</p>
-              <p className="text-xs text-[#7A8C82] mt-0.5">Total de sessões</p>
+            <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 text-center">
+              <p className="text-2xl font-bold text-[#0f172a]">{sessoes.length}</p>
+              <p className="text-xs text-[#64748b] mt-0.5">Total de sessões</p>
             </div>
-            <div className="bg-white rounded-2xl border border-[#E8E3DB] p-4 text-center">
-              <p className="text-2xl font-bold text-[#2D6A52]">{realizadas.length}</p>
-              <p className="text-xs text-[#7A8C82] mt-0.5">Realizadas</p>
+            <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 text-center">
+              <p className="text-2xl font-bold text-[#2563eb]">{realizadas.length}</p>
+              <p className="text-xs text-[#64748b] mt-0.5">Realizadas</p>
             </div>
-            <div className="bg-white rounded-2xl border border-[#E8E3DB] p-4 text-center">
-              <p className="text-2xl font-bold text-[#5A9E7C]">{comNotas.length}</p>
-              <p className="text-xs text-[#7A8C82] mt-0.5">Com anotações</p>
+            <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 text-center">
+              <p className="text-2xl font-bold text-[#3b82f6]">{comNotas.length}</p>
+              <p className="text-xs text-[#64748b] mt-0.5">Com anotações</p>
             </div>
           </div>
 
           {/* Timeline de sessões */}
           {sessoes.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-[#E8E3DB] flex flex-col items-center justify-center py-16 text-[#A8BFB2]">
+            <div className="bg-white rounded-2xl border border-[#e2e8f0] flex flex-col items-center justify-center py-16 text-[#94a3b8]">
               <CalendarDays className="w-10 h-10 mb-3 opacity-40" strokeWidth={1.5} />
               <p className="text-sm">Nenhuma sessão registrada</p>
             </div>
@@ -144,19 +144,19 @@ export default function HistoricoPage() {
               {sessoes.map((sessao) => (
                 <div
                   key={sessao.id}
-                  className="bg-white rounded-2xl border border-[#E8E3DB] shadow-sm overflow-hidden"
+                  className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden"
                 >
                   {/* Cabeçalho da sessão */}
                   <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0EDE7]">
                     <div className="flex items-center gap-3">
                       <div className="bg-[#F5F0EB] rounded-lg p-2">
-                        <Clock className="w-4 h-4 text-[#7A8C82]" strokeWidth={1.75} />
+                        <Clock className="w-4 h-4 text-[#64748b]" strokeWidth={1.75} />
                       </div>
                       <div>
-                        <p className="font-medium text-[#1C2B22] text-sm">
+                        <p className="font-medium text-[#0f172a] text-sm">
                           {format(parseISO(sessao.data_hora), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                         </p>
-                        <p className="text-xs text-[#7A8C82]">
+                        <p className="text-xs text-[#64748b]">
                           {format(parseISO(sessao.data_hora), 'HH:mm', { locale: ptBR })} · {sessao.duracao_min} min ·{' '}
                           {Number(sessao.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </p>
@@ -170,7 +170,7 @@ export default function HistoricoPage() {
                       {sessao.status === 'realizado' && (
                         <button
                           onClick={() => abrirEdicao(sessao)}
-                          className="p-1.5 hover:bg-[#EBF5EF] rounded-lg text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
+                          className="p-1.5 hover:bg-[#eff6ff] rounded-lg text-[#64748b] hover:text-[#2563eb] transition-colors"
                           title={sessao.notas_clinicas ? 'Editar nota' : 'Adicionar nota'}
                         >
                           <FileEdit className="w-4 h-4" strokeWidth={1.75} />
@@ -182,11 +182,11 @@ export default function HistoricoPage() {
                   {/* Conteúdo: notas ou placeholder */}
                   <div className="px-5 py-4">
                     {sessao.notas_clinicas ? (
-                      <p className="text-sm text-[#3D5247] leading-relaxed whitespace-pre-wrap">{sessao.notas_clinicas}</p>
+                      <p className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap">{sessao.notas_clinicas}</p>
                     ) : sessao.status === 'realizado' ? (
                       <button
                         onClick={() => abrirEdicao(sessao)}
-                        className="text-sm text-[#A8BFB2] hover:text-[#5A9E7C] italic transition-colors"
+                        className="text-sm text-[#94a3b8] hover:text-[#3b82f6] italic transition-colors"
                       >
                         Clique para adicionar notas clínicas desta sessão...
                       </button>
@@ -199,8 +199,8 @@ export default function HistoricoPage() {
 
                     {sessao.observacoes && (
                       <div className="mt-3 pt-3 border-t border-[#F0EDE7]">
-                        <p className="text-xs text-[#7A8C82] mb-1">Observações gerais</p>
-                        <p className="text-sm text-[#7A8C82]">{sessao.observacoes}</p>
+                        <p className="text-xs text-[#64748b] mb-1">Observações gerais</p>
+                        <p className="text-sm text-[#64748b]">{sessao.observacoes}</p>
                       </div>
                     )}
                   </div>
@@ -217,12 +217,12 @@ export default function HistoricoPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EDE7]">
               <div>
-                <h2 className="font-semibold text-[#1C2B22]">Notas Clínicas</h2>
-                <p className="text-xs text-[#7A8C82] mt-0.5">
+                <h2 className="font-semibold text-[#0f172a]">Notas Clínicas</h2>
+                <p className="text-xs text-[#64748b] mt-0.5">
                   {format(parseISO(editando.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </p>
               </div>
-              <button onClick={() => setEditando(null)} className="text-[#A8BFB2] hover:text-[#5A9E7C] transition-colors">
+              <button onClick={() => setEditando(null)} className="text-[#94a3b8] hover:text-[#3b82f6] transition-colors">
                 <X className="w-5 h-5" strokeWidth={1.75} />
               </button>
             </div>
@@ -233,20 +233,20 @@ export default function HistoricoPage() {
                 rows={8}
                 autoFocus
                 placeholder="Registre a evolução clínica, técnicas utilizadas, observações da sessão, plano terapêutico..."
-                className="w-full px-4 py-3 bg-white border border-[#D4CFC6] rounded-xl text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none resize-none leading-relaxed"
+                className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none resize-none leading-relaxed"
               />
-              <p className="text-xs text-[#A8BFB2] mt-1.5">Confidencial — visível apenas para você.</p>
+              <p className="text-xs text-[#94a3b8] mt-1.5">Confidencial — visível apenas para você.</p>
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   onClick={() => setEditando(null)}
-                  className="px-4 py-2.5 text-sm text-[#7A8C82] hover:bg-[#F5F0EB] rounded-xl transition-colors"
+                  className="px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#F5F0EB] rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={salvar}
                   disabled={saving}
-                  className="flex items-center gap-2 bg-[#1B3A2F] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#244D3F] active:scale-[0.98] transition-all disabled:opacity-60"
+                  className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all disabled:opacity-60"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" strokeWidth={2} />}
                   Salvar

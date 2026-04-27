@@ -52,7 +52,7 @@ export default function FinanceiroPage() {
       const nome = `"${s.paciente?.nome ?? ''}"`
       const cpf = s.paciente?.cpf ?? ''
       const valor = Number(s.valor).toFixed(2).replace('.', ',')
-      return [data, nome, cpf, valor, 'Consulta Psicológica'].join(',')
+      return [data, nome, cpf, valor, 'Consulta'].join(',')
     })
     const csv = [cabecalho, ...linhas].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })

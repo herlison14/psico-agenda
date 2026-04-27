@@ -4,16 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  FileText,
-  DollarSign,
-  UserCircle,
-  LogOut,
-  Menu,
-  X,
-  Leaf,
+  LayoutDashboard, CalendarDays, Users, FileText,
+  DollarSign, UserCircle, LogOut, Menu, X, Brain,
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
@@ -33,14 +25,12 @@ export default function Sidebar() {
 
   useEffect(() => { setOpen(false) }, [pathname])
 
-  // Quando o usuário abre a agenda, zera o badge
   useEffect(() => {
     if (pathname === '/agenda' || pathname.startsWith('/agenda/')) {
       setNovasSessoes(0)
     }
   }, [pathname])
 
-  // Verifica novas sessões a cada 30s
   useEffect(() => {
     async function verificar() {
       try {
@@ -63,15 +53,15 @@ export default function Sidebar() {
   const NavContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-7 border-b border-[#244D3F]">
-        <div className="bg-[#5A9E7C] rounded-xl p-2 shadow-inner">
-          <Leaf className="w-5 h-5 text-white" strokeWidth={1.5} />
+      <div className="flex items-center gap-3 px-6 py-7 border-b border-white/10">
+        <div className="bg-[#3b82f6] rounded-xl p-2 shadow-inner">
+          <Brain className="w-5 h-5 text-white" strokeWidth={1.5} />
         </div>
         <div>
           <p className="text-white font-semibold text-base leading-tight tracking-wide">
             PsiPlanner
           </p>
-          <p className="text-[#A8D5BC] text-xs font-light mt-0.5">Gestão psicológica</p>
+          <p className="text-[#93c5fd] text-xs font-light mt-0.5">Gestão em saúde</p>
         </div>
       </div>
 
@@ -86,14 +76,14 @@ export default function Sidebar() {
               href={href}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                 active
-                  ? 'bg-[#5A9E7C] text-white shadow-sm'
-                  : 'text-[#A8D5BC] hover:bg-[#244D3F] hover:text-white'
+                  ? 'bg-[#3b82f6] text-white shadow-sm'
+                  : 'text-[#93c5fd] hover:bg-white/10 hover:text-white'
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
               <span className="flex-1">{label}</span>
               {showBadge && (
-                <span className="bg-[#5A9E7C] text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                <span className="bg-[#3b82f6] text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
                   {novasSessoes}
                 </span>
               )}
@@ -103,10 +93,10 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="px-4 py-5 border-t border-[#244D3F]">
+      <div className="px-4 py-5 border-t border-white/10">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-[#A8D5BC] hover:bg-[#244D3F] hover:text-white transition-all duration-150"
+          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-[#93c5fd] hover:bg-white/10 hover:text-white transition-all duration-150"
         >
           <LogOut className="w-4 h-4" strokeWidth={1.75} />
           Sair
@@ -120,7 +110,7 @@ export default function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-40 lg:hidden bg-[#1B3A2F] text-[#A8D5BC] p-2.5 rounded-xl shadow-md"
+        className="fixed top-4 left-4 z-40 lg:hidden bg-[#1e3a8a] text-[#93c5fd] p-2.5 rounded-xl shadow-md"
         aria-label="Abrir menu"
       >
         <Menu className="w-5 h-5" />
@@ -136,13 +126,13 @@ export default function Sidebar() {
 
       {/* Mobile drawer */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-[#1B3A2F] z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 left-0 h-full w-64 bg-[#1e3a8a] z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <button
           onClick={() => setOpen(false)}
-          className="absolute top-4 right-4 text-[#A8D5BC] hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-[#93c5fd] hover:text-white transition-colors"
           aria-label="Fechar menu"
         >
           <X className="w-5 h-5" />
@@ -151,7 +141,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-[#1B3A2F] shrink-0 h-screen sticky top-0">
+      <aside className="hidden lg:flex flex-col w-64 bg-[#1e3a8a] shrink-0 h-screen sticky top-0">
         <NavContent />
       </aside>
     </>

@@ -106,49 +106,49 @@ export default function PacientesPage() {
     (p.email ?? '').toLowerCase().includes(busca.toLowerCase())
   )
 
-  const inputClass = "w-full px-4 py-2.5 bg-white border border-[#D4CFC6] rounded-xl text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none transition-all"
-  const labelClass = "block text-sm font-medium text-[#3D5247] mb-1.5"
+  const inputClass = "w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none transition-all"
+  const labelClass = "block text-sm font-medium text-[#334155] mb-1.5"
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-[#EBF5EF] rounded-xl p-2.5">
-            <Users className="w-5 h-5 text-[#2D6A52]" strokeWidth={1.75} />
+          <div className="bg-[#eff6ff] rounded-xl p-2.5">
+            <Users className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-[#1C2B22]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
+            <h1 className="text-2xl font-semibold text-[#0f172a]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
               Pacientes
             </h1>
-            <p className="text-sm text-[#7A8C82]">{pacientes.filter(p => p.ativo).length} ativos</p>
+            <p className="text-sm text-[#64748b]">{pacientes.filter(p => p.ativo).length} ativos</p>
           </div>
         </div>
         <button
           onClick={openNew}
-          className="flex items-center gap-2 bg-[#1B3A2F] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#244D3F] active:scale-[0.98] transition-all"
+          className="flex items-center gap-2 bg-[#1e3a8a] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all"
         >
           <Plus className="w-4 h-4" strokeWidth={2} /> Novo paciente
         </button>
       </div>
 
       <div className="relative mb-4">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A8BFB2]" strokeWidth={1.75} />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8]" strokeWidth={1.75} />
         <input
           type="text"
           value={busca}
           onChange={e => setBusca(e.target.value)}
           placeholder="Buscar por nome ou e-mail..."
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#D4CFC6] rounded-xl text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none transition-all"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none transition-all"
         />
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E8E3DB] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#E8E3DB] border-t-[#5A9E7C]" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#e2e8f0] border-t-[#3b82f6]" />
           </div>
         ) : filtrados.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-14 text-[#A8BFB2]">
+          <div className="flex flex-col items-center justify-center py-14 text-[#94a3b8]">
             <Users className="w-10 h-10 mb-3 opacity-40" strokeWidth={1.5} />
             <p className="text-sm">{busca ? 'Nenhum resultado encontrado' : 'Nenhum paciente cadastrado'}</p>
           </div>
@@ -156,22 +156,22 @@ export default function PacientesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#F0EDE7]">
-                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#7A8C82] uppercase tracking-wide">Nome</th>
-                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#7A8C82] uppercase tracking-wide hidden sm:table-cell">Telefone</th>
-                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#7A8C82] uppercase tracking-wide hidden md:table-cell">E-mail</th>
-                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#7A8C82] uppercase tracking-wide">Sessão</th>
-                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#7A8C82] uppercase tracking-wide">Status</th>
+                <tr className="border-b border-[#f1f5f9]">
+                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#64748b] uppercase tracking-wide">Nome</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#64748b] uppercase tracking-wide hidden sm:table-cell">Telefone</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#64748b] uppercase tracking-wide hidden md:table-cell">E-mail</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#64748b] uppercase tracking-wide">Sessão</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-medium text-[#64748b] uppercase tracking-wide">Status</th>
                   <th className="px-5 py-3.5 w-10" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F0EDE7]">
+              <tbody className="divide-y divide-[#f1f5f9]">
                 {filtrados.map(p => (
                   <tr key={p.id} className="hover:bg-[#FAFAF8] transition-colors">
-                    <td className="px-5 py-4 font-medium text-[#1C2B22]">{p.nome}</td>
-                    <td className="px-5 py-4 text-[#7A8C82] hidden sm:table-cell">{p.telefone || '—'}</td>
-                    <td className="px-5 py-4 text-[#7A8C82] hidden md:table-cell">{p.email || '—'}</td>
-                    <td className="px-5 py-4 text-[#1C2B22] font-medium">
+                    <td className="px-5 py-4 font-medium text-[#0f172a]">{p.nome}</td>
+                    <td className="px-5 py-4 text-[#64748b] hidden sm:table-cell">{p.telefone || '—'}</td>
+                    <td className="px-5 py-4 text-[#64748b] hidden md:table-cell">{p.email || '—'}</td>
+                    <td className="px-5 py-4 text-[#0f172a] font-medium">
                       {Number(p.valor_sessao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </td>
                     <td className="px-5 py-4">
@@ -179,7 +179,7 @@ export default function PacientesPage() {
                         onClick={() => toggleAtivo(p)}
                         className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
                           p.ativo
-                            ? 'bg-[#EBF5EF] text-[#2D6A52] hover:bg-[#D4EDDF]'
+                            ? 'bg-[#eff6ff] text-[#2563eb] hover:bg-[#dbeafe]'
                             : 'bg-[#F5F0EB] text-[#9A8570] hover:bg-[#EDE6DC]'
                         }`}
                       >
@@ -192,14 +192,14 @@ export default function PacientesPage() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => router.push(`/pacientes/${p.id}`)}
-                          className="p-1.5 hover:bg-[#EBF5EF] rounded-lg text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
+                          className="p-1.5 hover:bg-[#eff6ff] rounded-lg text-[#64748b] hover:text-[#2563eb] transition-colors"
                           title="Histórico clínico"
                         >
                           <BookOpen className="w-4 h-4" strokeWidth={1.75} />
                         </button>
                         <button
                           onClick={() => openEdit(p)}
-                          className="p-1.5 hover:bg-[#EBF5EF] rounded-lg text-[#7A8C82] hover:text-[#2D6A52] transition-colors"
+                          className="p-1.5 hover:bg-[#eff6ff] rounded-lg text-[#64748b] hover:text-[#2563eb] transition-colors"
                           title="Editar paciente"
                         >
                           <Edit2 className="w-4 h-4" strokeWidth={1.75} />
@@ -217,9 +217,9 @@ export default function PacientesPage() {
       {modalOpen && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EDE7]">
-              <h2 className="font-semibold text-[#1C2B22]">{editId ? 'Editar paciente' : 'Novo paciente'}</h2>
-              <button onClick={() => setModalOpen(false)} className="text-[#A8BFB2] hover:text-[#5A9E7C] transition-colors">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#f1f5f9]">
+              <h2 className="font-semibold text-[#0f172a]">{editId ? 'Editar paciente' : 'Novo paciente'}</h2>
+              <button onClick={() => setModalOpen(false)} className="text-[#94a3b8] hover:text-[#3b82f6] transition-colors">
                 <X className="w-5 h-5" strokeWidth={1.75} />
               </button>
             </div>
@@ -270,7 +270,7 @@ export default function PacientesPage() {
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Valor padrão da sessão (R$)</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#7A8C82]">R$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#64748b]">R$</span>
                     <input
                       type="number"
                       step="0.01"
@@ -291,14 +291,14 @@ export default function PacientesPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2.5 text-sm text-[#7A8C82] hover:bg-[#F5F0EB] rounded-xl transition-colors"
+                  className="px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#F5F0EB] rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-2 bg-[#1B3A2F] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#244D3F] active:scale-[0.98] transition-all disabled:opacity-60"
+                  className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all disabled:opacity-60"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   {editId ? 'Salvar alterações' : 'Cadastrar paciente'}

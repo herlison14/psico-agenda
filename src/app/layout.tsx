@@ -8,7 +8,7 @@ const lora = Lora({ subsets: ['latin'], variable: '--font-lora' })
 
 export const metadata: Metadata = {
   title: 'PsiPlanner',
-  description: 'Gestão de agenda, pacientes e financeiro para psicólogos',
+  description: 'Gestão de agenda, pacientes e financeiro para profissionais de saúde',
 }
 
 export default function RootLayout({

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Leaf, Loader2 } from 'lucide-react'
+import { Brain, Loader2 } from 'lucide-react'
 
 function NovaSenhaForm() {
   const searchParams = useSearchParams()
@@ -42,21 +42,21 @@ function NovaSenhaForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-[#F7F5F0]">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-[#f8fafc]">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-3 mb-10">
-          <div className="bg-[#1B3A2F] rounded-xl p-2">
-            <Leaf className="w-5 h-5 text-[#5A9E7C]" strokeWidth={1.5} />
+          <div className="bg-[#1e3a8a] rounded-xl p-2">
+            <Brain className="w-5 h-5 text-[#3b82f6]" strokeWidth={1.5} />
           </div>
-          <span className="text-[#1C2B22] font-semibold text-lg">PsiPlanner</span>
+          <span className="text-[#0f172a] font-semibold text-lg">PsiPlanner</span>
         </div>
 
-        <h1 className="text-2xl font-semibold text-[#1C2B22] mb-1">Nova senha</h1>
-        <p className="text-[#7A8C82] text-sm mb-8">Escolha uma senha segura com pelo menos 8 caracteres.</p>
+        <h1 className="text-2xl font-semibold text-[#0f172a] mb-1">Nova senha</h1>
+        <p className="text-[#64748b] text-sm mb-8">Escolha uma senha segura com pelo menos 8 caracteres.</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-[#3D5247] mb-1.5">Nova senha</label>
+            <label className="block text-sm font-medium text-[#334155] mb-1.5">Nova senha</label>
             <input
               type="password"
               value={senha}
@@ -65,11 +65,11 @@ function NovaSenhaForm() {
               minLength={8}
               placeholder="••••••••"
               disabled={!token}
-              className="w-full px-4 py-3 bg-white border border-[#D4CFC6] rounded-xl focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] transition-all disabled:opacity-50"
+              className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none text-sm text-[#0f172a] placeholder:text-[#94a3b8] transition-all disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#3D5247] mb-1.5">Confirmar senha</label>
+            <label className="block text-sm font-medium text-[#334155] mb-1.5">Confirmar senha</label>
             <input
               type="password"
               value={confirmacao}
@@ -78,7 +78,7 @@ function NovaSenhaForm() {
               minLength={8}
               placeholder="••••••••"
               disabled={!token}
-              className="w-full px-4 py-3 bg-white border border-[#D4CFC6] rounded-xl focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] transition-all disabled:opacity-50"
+              className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none text-sm text-[#0f172a] placeholder:text-[#94a3b8] transition-all disabled:opacity-50"
             />
           </div>
 
@@ -89,7 +89,7 @@ function NovaSenhaForm() {
           <button
             type="submit"
             disabled={loading || !token}
-            className="w-full bg-[#1B3A2F] text-white py-3 rounded-xl font-medium hover:bg-[#244D3F] active:scale-[0.98] transition-all duration-150 disabled:opacity-60 flex items-center justify-center gap-2 text-sm"
+            className="w-full bg-[#1e3a8a] text-white py-3 rounded-xl font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all duration-150 disabled:opacity-60 flex items-center justify-center gap-2 text-sm"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             Redefinir senha

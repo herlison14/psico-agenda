@@ -86,29 +86,29 @@ export default function PerfilPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#E8E3DB] border-t-[#5A9E7C]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#e2e8f0] border-t-[#3b82f6]" />
       </div>
     )
   }
 
-  const inputClass = "w-full px-4 py-2.5 bg-white border border-[#D4CFC6] rounded-xl text-sm text-[#1C2B22] placeholder:text-[#B0ABA3] focus:ring-2 focus:ring-[#5A9E7C] focus:border-[#5A9E7C] outline-none transition-all"
-  const labelClass = "block text-sm font-medium text-[#3D5247] mb-1.5"
+  const inputClass = "w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none transition-all"
+  const labelClass = "block text-sm font-medium text-[#334155] mb-1.5"
 
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-[#EBF5EF] rounded-xl p-2.5">
-          <UserCircle className="w-5 h-5 text-[#2D6A52]" strokeWidth={1.75} />
+        <div className="bg-[#eff6ff] rounded-xl p-2.5">
+          <UserCircle className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-[#1C2B22]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
+          <h1 className="text-2xl font-semibold text-[#0f172a]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
             Meu Perfil
           </h1>
-          <p className="text-sm text-[#7A8C82]">Dados profissionais exibidos nos recibos</p>
+          <p className="text-sm text-[#64748b]">Dados profissionais exibidos nos recibos</p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="bg-white rounded-2xl border border-[#E8E3DB] p-6 shadow-sm space-y-5">
+      <form onSubmit={handleSave} className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="sm:col-span-2">
             <label className={labelClass}>Nome completo</label>
@@ -200,7 +200,7 @@ export default function PerfilPage() {
         </div>
 
         {sucesso && (
-          <div className="flex items-center gap-2 bg-[#EBF5EF] border border-[#A8D5BC] text-[#2D6A52] px-4 py-3 rounded-xl text-sm">
+          <div className="flex items-center gap-2 bg-[#eff6ff] border border-[#93c5fd] text-[#2563eb] px-4 py-3 rounded-xl text-sm">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             Perfil salvo com sucesso!
           </div>
@@ -213,7 +213,7 @@ export default function PerfilPage() {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 bg-[#1B3A2F] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#244D3F] active:scale-[0.98] transition-all disabled:opacity-60"
+            className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all disabled:opacity-60"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" strokeWidth={1.75} />}
             Salvar perfil

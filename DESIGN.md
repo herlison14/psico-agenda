@@ -1,145 +1,121 @@
 # Design System: PsiPlanner
-**Project:** psico-agenda · SaaS de gestão para psicólogos brasileiros
+**Projeto:** Plataforma SaaS de Gestão para Profissionais de Saúde
 
 ---
 
 ## 1. Visual Theme & Atmosphere
 
-**Calm Authority.** O PsiPlanner comunica confiança e tranquilidade — as qualidades centrais de um bom terapeuta. A paleta vem da floresta: verdes profundos e terrosos que transmitem seriedade sem intimidar, sobre fundos creme que aquecem sem distrair.
+**Sereno, Clínico e Confiável.**
 
-A densidade é **moderada-baixa**: muito espaço em branco, seções bem separadas, hierarquia clara. Não é austero como um sistema médico, nem lúdico como um app de fitness. É o meio-termo certo: profissional, humano, tranquilo.
+PsiPlanner adota uma estética de SaaS de saúde moderno — organizado, profissional e humano ao mesmo tempo. O visual comunica confiança e clareza, sem ser frio ou impessoal. O fundo branco puro com acentos em azul cria uma sensação de limpeza clínica que remete a ambientes de saúde, enquanto toques de azul-marinho profundo ancoram hierarquia e autoridade. O espaçamento generoso e a tipografia leve transmitem leveza e redução de carga cognitiva — alinhado ao propósito da plataforma: menos papelada, mais foco no paciente.
 
 ---
 
 ## 2. Color Palette & Roles
 
-### Verdes Primários (Floresta)
-- **Deep Forest** (`#1B3A2F`) — Cor de marca. Fundos de hero, sidebar, header de chat, botões primários. Âncora visual do sistema.
-- **Forest Mid** (`#244D3F`) — Estado hover dos elementos Forest. Aprofunda sem chocar.
-- **Forest Light** (`#2D6A52`) — Links internos, texto de destaque sobre fundos claros, rótulos secundários.
-
-### Verdes de Ação (Sage)
-- **Sage** (`#5A9E7C`) — CTA principal, ícones ativos, indicador de status online, stars de rating. O "sim" visual do sistema.
-- **Sage Dark** (`#4A8E6C`) — Hover do Sage. Pressão controlada.
-- **Sage Light** (`#A8D5BC`) — Texto sobre fundos Forest. Legível sem brilhar.
-- **Sage Pale** (`#EBF5EF`) — Backgrounds de ícones, badges, botões ghost. Tom de respiro.
-- **Sage Border** (`#C8E6D4`) — Bordas de elementos com contexto verde. Muito suave.
-
-### Neutros Quentes (Creme & Terra)
-- **Cream** (`#F7F5F0`) — Background global. Quente, não branco puro. Reduz fadiga visual.
-- **Cream Mid** (`#F0EDE7`) — Hover de linhas de lista, divisores internos de card, fundo de mensagem do agente.
-- **Warm Border** (`#E8E3DB`) — Bordas de cards, separadores de seção. Tom padrão de contorno.
-- **Input Border** (`#D4CFC6`) — Bordas de campos de formulário no estado normal.
-
-### Texto
-- **Primary Text** (`#1C2B22`) — Títulos H1/H2, valores numéricos, labels principais. Verde-escuro quase preto.
-- **Secondary Text** (`#3D5247`) — Labels de formulário, itens de lista, texto de card.
-- **Body Text** (`#5A7268`) — Parágrafos longos, descrições de funcionalidades.
-- **Tertiary Text** (`#7A8C82`) — Metadata, timestamps, textos de apoio.
-- **Muted Text** (`#A8BFB2`) — Footer, placeholders desativados, textos legais.
-- **Placeholder** (`#B0ABA3`) — Placeholder de inputs.
+| Nome Descritivo | Hex | Papel Funcional |
+|---|---|---|
+| **Azul Âncora** | `#1e3a8a` | Backgrounds primários (sidebar, hero, cabeçalhos escuros) |
+| **Azul Autoridade** | `#1d4ed8` | Hover em elementos primários, botões secundários |
+| **Azul Ação** | `#2563eb` | Botões CTA, links ativos, badges de destaque |
+| **Azul Clareza** | `#3b82f6` | Ícones ativos, acentos interativos, item ativo da sidebar |
+| **Azul Suave** | `#93c5fd` | Textos secundários em fundos escuros |
+| **Azul Névoa** | `#dbeafe` | Hover em cards, badges informativos |
+| **Azul Gelo** | `#eff6ff` | Backgrounds de ícone containers, seções alternativas |
+| **Cinza Profundo** | `#0f172a` | Títulos principais, valores de KPI |
+| **Cinza Sombra** | `#334155` | Textos de corpo, labels de formulário |
+| **Cinza Médio** | `#64748b` | Textos secundários, subtítulos |
+| **Cinza Claro** | `#94a3b8` | Metadados, rodapés, placeholders |
+| **Cinza Borda** | `#e2e8f0` | Bordas de cards, divisores |
+| **Cinza Superfície** | `#f1f5f9` | Backgrounds de seção alternativa |
+| **Branco Puro** | `#ffffff` | Background principal, cards, formulários |
+| **Verde Sucesso** | `#10b981` | Status "realizado", confirmações, ativo |
+| **Âmbar Alerta** | `#f59e0b` | Avisos de trial, notificações de atenção |
+| **Vermelho Erro** | `#ef4444` | Erros, validações negativas |
 
 ---
 
 ## 3. Typography Rules
 
-**Dois papéis, dois tipos.**
+**Família:** Sans-serif do sistema (`Inter`, `Segoe UI`, `system-ui`) para toda interface. Serif (`Georgia`) reservado para citações no painel lateral de autenticação.
 
-- **Inter** (sans-serif) — Usado em todo o corpo de texto, UI, botões, badges, formulários e navegação. Peso padrão `font-normal` (400), `font-medium` (500) para labels e navegação, `font-semibold` (600) para títulos de card e nomes, `font-bold` (700) para headings de seção e KPIs.
+**Hierarquia de Peso:**
+- `font-bold` (700) — Títulos de página, valores KPI, nomes em destaque
+- `font-semibold` (600) — Subtítulos de seção, labels nav, botões
+- `font-medium` (500) — Labels de formulário, itens de lista
+- `font-normal` (400) — Corpo de texto, descrições
 
-- **Lora** (serif, `var(--font-lora, Georgia, serif)`) — Reservado para momentos de calor humano: títulos de login/register (`text-2xl font-semibold`), citações e blockquotes. Cria contraste emocional com a objetividade do Inter.
-
-**Hierarquia de tamanhos:**
-- Hero H1: `text-4xl` → `text-5xl` → `text-6xl` (responsivo)
-- Section H2: `text-3xl font-bold`
-- Card H3: `text-base font-semibold`
-- Body: `text-sm` a `text-base`, `leading-relaxed`
-- Metadata: `text-xs`
-
-**Letter-spacing:** Badges e labels de seção usam `tracking-widest uppercase text-xs` em Sage — cria ritmo visual entre títulos grandes.
+**Escala Tipográfica:**
+- `text-6xl/text-5xl` — Hero headline (landing apenas)
+- `text-3xl` — Títulos de seção (h2)
+- `text-2xl` — Títulos de página, KPIs
+- `text-xl` — Subtítulos de card
+- `text-sm` — Labels, metadados
+- `text-xs` + `uppercase` + `tracking-widest` — Badges de categoria exclusivamente
 
 ---
 
 ## 4. Component Stylings
 
 ### Botões
-
-- **Primário Forest:** `bg-[#1B3A2F] text-white px-8 py-3.5 rounded-xl font-medium hover:bg-[#244D3F]` — Ação principal (login, submit). Sem sombra.
-- **Primário Sage:** `bg-[#5A9E7C] text-white px-8 py-4 rounded-xl font-semibold hover:bg-[#4A8E6C]` — CTA de conversão (criar conta, assinar). Levemente maior, mais impacto.
-- **Ghost Verde:** `bg-[#EBF5EF] text-[#2D6A52] py-3.5 rounded-xl font-semibold hover:bg-[#D4EDDF]` — Ação secundária (trial, alternativas). Amigável, sem peso.
-- **Ghost Neutro:** `bg-white/10 text-white border border-white/20 px-8 py-4 rounded-xl` — Sobre fundos escuros (hero). Transparência discreta.
-
-**Geometria:** Todos os botões usam `rounded-xl` — cantos generosamente arredondados. Consistente com a identidade acolhedora. Nenhum botão é pill (`rounded-full`) — mantém seriedade profissional.
+- **Primário:** `bg-[#2563eb]` texto branco, `rounded-xl`, hover `bg-[#1d4ed8]`, transição 150ms
+- **Secundário:** `bg-[#eff6ff]` texto `#2563eb`, borda `#dbeafe`, hover `bg-[#dbeafe]`
+- **Ghost:** `border border-[#e2e8f0]` texto `#334155`, hover `bg-[#f1f5f9]`
+- **Tamanhos:** `px-5 py-2.5` (padrão) · `px-8 py-4` (CTA hero)
 
 ### Cards / Containers
+- `rounded-2xl` — nunca reto, nunca pílula
+- `bg-white border border-[#e2e8f0] shadow-sm` — padrão
+- Hover: `shadow-md` — elevação suave
+- Cards premium: `bg-[#1e3a8a]` texto branco
 
-- **Card padrão:** `bg-white rounded-2xl border border-[#E8E3DB] shadow-sm` — Base do sistema. Fundo branco sobre creme cria contraste suave.
-- **Card escuro (pricing Pro):** `bg-[#1B3A2F] rounded-2xl shadow-xl` — Destaque máximo, sombra pronunciada para flutuar.
-- **Card de depoimento:** `bg-white/10 backdrop-blur rounded-2xl border border-white/10` — Glassmorphism leve sobre fundo Forest.
-- **Container de seção:** `bg-white border-y border-[#E8E3DB]` — Alternância entre creme e branco para ritmo de scroll.
+### Inputs / Forms
+- `bg-white border border-[#e2e8f0] rounded-xl`
+- Focus: `ring-2 ring-[#2563eb] border-[#2563eb]`
+- Placeholder: `text-[#94a3b8]`
+- Label: `text-sm font-medium text-[#334155]`
 
-**Hover em cards:** `hover:shadow-md transition-shadow` — Eleva sutilmente ao hover, indica interatividade sem exagero.
+### Badges / Pills
+- Sempre `rounded-full`
+- Info: `bg-[#eff6ff] text-[#2563eb]`
+- Sucesso: `bg-green-50 text-green-700`
+- Alerta: `bg-amber-50 text-amber-700`
+- Erro: `bg-red-50 text-red-600`
 
-### Inputs / Formulários
+### Sidebar
+- Fundo: `bg-[#1e3a8a]` (Azul Âncora)
+- Item ativo: `bg-[#3b82f6] text-white`
+- Item inativo: `text-[#93c5fd] hover:bg-white/10 hover:text-white`
+- Logo icon: container `bg-[#3b82f6] rounded-xl`
 
-- **Input padrão:** `bg-white border border-[#D4CFC6] rounded-xl px-4 py-3 text-sm` 
-- **Focus:** `focus:ring-2 focus:ring-[#5A9E7C] focus:border-transparent outline-none` — Anel verde sage, sem borda dupla.
-- **Placeholder:** `placeholder:text-[#B0ABA3]` — Muted warm gray.
-- **Label:** `text-sm font-medium text-[#3D5247] mb-1.5` — Secondary text, peso médio.
-- **Erro:** `bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm` — Vermelho padrão fora do sistema verde, mas respeitando o arredondamento.
-
-### Ícones / Icon Wrappers
-
-Os ícones nunca aparecem soltos. São sempre envolvidos em um container colorido:
-- `bg-[#EBF5EF] rounded-xl p-2.5` com ícone `text-[#2D6A52]` — padrão de feature card
-- `bg-[#1B3A2F] rounded-xl p-2` com ícone `text-white` — header, sidebar, logo
-
-**Strokewidth:** Todos os ícones Lucide usam `strokeWidth={1.75}` (suave) ou `strokeWidth={1.5}` (logo). Nunca 2 ou mais — mantém leveza.
-
-### Badges / Tags
-
-- `bg-[#5A9E7C]/30 text-[#A8D5BC] border border-[#5A9E7C]/40 rounded-full px-4 py-1.5 text-xs font-semibold tracking-widest uppercase` — sobre fundo escuro
-- `bg-[#EBF5EF] text-[#2D6A52] rounded-full px-3 py-1.5 text-xs font-semibold` — sobre fundo claro
-
-### Navegação (Sidebar)
-
-- Fundo: `bg-[#1B3A2F]`
-- Item ativo: `bg-[#5A9E7C] text-white rounded-xl`
-- Item inativo: `text-[#A8D5BC] hover:bg-[#244D3F] hover:text-white rounded-xl`
-- Separadores: `border-[#244D3F]`
+### KPI Cards (Dashboard)
+- `bg-white border border-[#e2e8f0] shadow-sm rounded-2xl p-5`
+- Ícone container: `bg-[#eff6ff] rounded-xl p-3`
+- Ícone: `text-[#2563eb]`
+- Valor: `text-2xl font-bold text-[#0f172a]`
+- Label: `text-xs uppercase tracking-wide text-[#64748b]`
 
 ---
 
 ## 5. Layout Principles
 
-**Generosidade vertical.** Seções principais usam `py-24` — 96px de respiro acima e abaixo. Isso cria pausas limpas entre os blocos de conteúdo, permitindo que cada seção "respire" e se comunique de forma independente.
-
-**Largura máxima:** `max-w-6xl` (72rem/1152px) com `px-6` — largura confortável para leitura em desktop sem esticar demais o layout.
-
-**Grid responsivo:** Seções de features usam `grid sm:grid-cols-2 lg:grid-cols-3 gap-6`. Pricing usa `grid sm:grid-cols-2 max-w-2xl mx-auto` — centralizado para não parecer esparso.
-
-**Alternância de fundo:** As seções alternam entre `bg-[#F7F5F0]` (creme), `bg-white` e `bg-[#1B3A2F]` (dark). Cria ritmo visual sem precisar de ilustrações ou imagens.
-
-**Hierarquia por densidade:** Hero denso (texto + stats + CTAs) → seções de features abertas → CTA final concentrado. O scroll é uma jornada de persuasão.
-
-**Sticky header:** `sticky top-0 z-50 bg-white/90 backdrop-blur-md` — Header semi-transparente com blur. Presente sem bloquear o conteúdo.
-
-**Espaçamento interno de cards:** `p-5` a `p-8` dependendo da importância do card. Cards de pricing usam `p-8` para dar peso ao conteúdo.
+- **Espaçamento:** `p-6` (cards), `py-24` (seções landing), `px-6` (margens laterais)
+- **Máximos:** `max-w-6xl` (geral), `max-w-2xl` (formulários/planos), `max-w-7xl` (wide)
+- **Grid:** Mobile-first. KPIs: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`. Split: `lg:grid-cols-2`
+- **Ritmo:** Seções alternam `bg-white` ↔ `bg-[#f1f5f9]` sem bordas extras
+- **Radius:** `rounded-xl` (botões, inputs) e `rounded-2xl` (cards) — nunca misturar
+- **Header:** `bg-white/90 backdrop-blur-md border-b border-[#e2e8f0] shadow-sm` sticky
 
 ---
 
-## 6. Motion & Interaction
+## 6. Linguagem & Inclusividade
 
-- Todas as transições usam `transition-colors duration-150` ou `transition-shadow`
-- Sem animações de entrada ou parallax — não é um portfólio, é uma ferramenta
-- Botões têm `active:scale-[0.98]` — feedback tátil sutil
-- FAQ accordion usa `transition-transform duration-200` no chevron — suave e funcional
-- Loading states: `animate-bounce` nos dots do chat (delay escalonado), `animate-spin` no Loader2
+A plataforma atende **todos os profissionais de saúde**: psicólogos, nutricionistas, médicos, endocrinologistas, fisioterapeutas, fonoaudiólogos e outros.
 
----
-
-## 7. Design Principles (Resumo para Prompting)
-
-Use estas frases ao promptr Stitch para novas telas:
-
-> *"Calm, trustworthy SaaS interface. Deep forest green (#1B3A2F) brand color on warm cream (#F7F5F0) backgrounds. Generously rounded corners (rounded-xl to rounded-2xl). Sage green (#5A9E7C) for actions and positive states. White cards with warm gray borders (#E8E3DB) and whisper-soft shadows. Inter for UI, Lora serif for emotional moments. Generous vertical padding. Semi-transparent sticky header with blur. Professional but human — not clinical."*
+| ❌ Específico | ✅ Inclusivo |
+|---|---|
+| "Psicólogo(a)" em títulos | "Profissional de saúde" |
+| "Consulta Psicológica" genérico | "Consulta" |
+| "Desenvolvido para psicólogos" | "Para profissionais de saúde" |
+| "Gestão psicológica" | "Gestão em saúde" |
+| "CRP" em campos genéricos | "Registro profissional (CRM, CRP, CRN...)" |

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, use } from 'react'
-import { Leaf, Send, Loader2, ArrowRight } from 'lucide-react'
+import { Brain, Send, Loader2, ArrowRight } from 'lucide-react'
 
 type Msg = { role: 'user' | 'assistant'; content: string }
 
@@ -73,49 +73,49 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0] flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center px-4 py-10">
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-8">
-        <div className="bg-[#1B3A2F] rounded-xl p-2">
-          <Leaf className="w-4 h-4 text-white" strokeWidth={1.5} />
+        <div className="bg-[#1e3a8a] rounded-xl p-2">
+          <Brain className="w-4 h-4 text-white" strokeWidth={1.5} />
         </div>
-        <span className="font-semibold text-[#1B3A2F] text-lg">PsiPlanner</span>
+        <span className="font-semibold text-[#1e3a8a] text-lg">PsiPlanner</span>
       </div>
 
       <div className="w-full max-w-md">
         {!identificado ? (
           /* ── Formulário de identificação ── */
-          <div className="bg-white rounded-2xl border border-[#E8E3DB] shadow-sm p-8">
-            <h1 className="text-xl font-semibold text-[#1B3A2F] mb-1">Agendar consulta</h1>
-            <p className="text-sm text-[#7A8C82] mb-6">
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm p-8">
+            <h1 className="text-xl font-semibold text-[#1e3a8a] mb-1">Agendar consulta</h1>
+            <p className="text-sm text-[#64748b] mb-6">
               Informe seus dados para continuar com o agendamento.
             </p>
             <form onSubmit={handleIdentificacao} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#3D5247] mb-1.5">Seu nome</label>
+                <label className="block text-sm font-medium text-[#334155] mb-1.5">Seu nome</label>
                 <input
                   type="text"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Ex: Ana Silva"
                   required
-                  className="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#E8E3DB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5A9E7C]"
+                  className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#3D5247] mb-1.5">Telefone / WhatsApp</label>
+                <label className="block text-sm font-medium text-[#334155] mb-1.5">Telefone / WhatsApp</label>
                 <input
                   type="tel"
                   value={telefone}
                   onChange={(e) => setTelefone(e.target.value)}
                   placeholder="(21) 99999-9999"
                   required
-                  className="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#E8E3DB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5A9E7C]"
+                  className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-[#1B3A2F] text-white py-3 rounded-xl font-medium text-sm hover:bg-[#244D3F] transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-[#1e3a8a] text-white py-3 rounded-xl font-medium text-sm hover:bg-[#1d4ed8] transition-colors"
               >
                 Continuar <ArrowRight className="w-4 h-4" />
               </button>
@@ -123,17 +123,17 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
           </div>
         ) : (
           /* ── Chat com July ── */
-          <div className="bg-white rounded-2xl border border-[#E8E3DB] shadow-sm overflow-hidden flex flex-col h-[560px]">
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden flex flex-col h-[560px]">
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 bg-[#1B3A2F]">
-              <div className="bg-[#5A9E7C] rounded-full w-9 h-9 flex items-center justify-center shrink-0">
-                <Leaf className="w-4 h-4 text-white" strokeWidth={1.5} />
+            <div className="flex items-center gap-3 px-5 py-4 bg-[#1e3a8a]">
+              <div className="bg-[#3b82f6] rounded-full w-9 h-9 flex items-center justify-center shrink-0">
+                <Brain className="w-4 h-4 text-white" strokeWidth={1.5} />
               </div>
               <div>
                 <p className="text-white text-sm font-semibold">July</p>
-                <p className="text-[#A8D5BC] text-xs">Assistente de agendamento</p>
+                <p className="text-[#93c5fd] text-xs">Assistente de agendamento</p>
               </div>
-              <div className="ml-auto w-2 h-2 bg-[#5A9E7C] rounded-full" />
+              <div className="ml-auto w-2 h-2 bg-[#3b82f6] rounded-full" />
             </div>
 
             {/* Mensagens */}
@@ -143,8 +143,8 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
                   <div
                     className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                       m.role === 'user'
-                        ? 'bg-[#1B3A2F] text-white rounded-br-sm'
-                        : 'bg-[#F0EDE7] text-[#1C2B22] rounded-bl-sm'
+                        ? 'bg-[#1e3a8a] text-white rounded-br-sm'
+                        : 'bg-[#F0EDE7] text-[#0f172a] rounded-bl-sm'
                     }`}
                   >
                     {m.content}
@@ -158,7 +158,7 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
                       {[0, 1, 2].map((i) => (
                         <div
                           key={i}
-                          className="w-1.5 h-1.5 bg-[#7A8C82] rounded-full animate-bounce"
+                          className="w-1.5 h-1.5 bg-[#64748b] rounded-full animate-bounce"
                           style={{ animationDelay: `${i * 0.15}s` }}
                         />
                       ))}
@@ -176,7 +176,7 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
                   <button
                     key={s}
                     onClick={() => send(s)}
-                    className="text-xs bg-[#EBF5EF] text-[#2D6A52] px-3 py-1.5 rounded-full hover:bg-[#D4EDDF] transition-colors"
+                    className="text-xs bg-[#eff6ff] text-[#2563eb] px-3 py-1.5 rounded-full hover:bg-[#dbeafe] transition-colors"
                   >
                     {s}
                   </button>
@@ -191,12 +191,12 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Digite sua mensagem..."
-                  className="flex-1 px-4 py-2.5 bg-[#F7F5F0] border border-[#E8E3DB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5A9E7C]"
+                  className="flex-1 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
                 />
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
-                  className="bg-[#1B3A2F] text-white p-2.5 rounded-xl hover:bg-[#244D3F] disabled:opacity-40 transition-colors"
+                  className="bg-[#1e3a8a] text-white p-2.5 rounded-xl hover:bg-[#1d4ed8] disabled:opacity-40 transition-colors"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
@@ -205,7 +205,7 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
           </div>
         )}
 
-        <p className="text-center text-xs text-[#A8BFB2] mt-5">
+        <p className="text-center text-xs text-[#94a3b8] mt-5">
           Agendamento seguro via PsiPlanner · Seus dados são protegidos
         </p>
       </div>

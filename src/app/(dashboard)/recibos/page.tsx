@@ -61,7 +61,7 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
   doc.text('RECIBO DE PAGAMENTO', pw / 2, 18, { align: 'center' })
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text('Consulta Psicológica', pw / 2, 26, { align: 'center' })
+  doc.text('Consulta', pw / 2, 26, { align: 'center' })
   doc.setFontSize(11)
   doc.setFont('helvetica', 'bold')
   doc.text(`Nº ${String(recibo.numero).padStart(6, '0')}`, pw / 2, 34, { align: 'center' })
@@ -70,7 +70,7 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
   doc.setTextColor(...gray)
   doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
-  doc.text('PSICÓLOGO(A)', 20, y)
+  doc.text('PROFISSIONAL DE SAÚDE', 20, y)
   y += 5
   doc.setTextColor(...dark)
   doc.setFontSize(11)
@@ -80,7 +80,7 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...gray)
-  if (psicologo.crp) doc.text(`CRP: ${psicologo.crp}`, 20, y)
+  if (psicologo.crp) doc.text(`Registro: ${psicologo.crp}`, 20, y)
   if (psicologo.cpf) doc.text(`CPF: ${psicologo.cpf}`, 100, y)
   y += 5
   if (psicologo.endereco) doc.text(psicologo.endereco, 20, y)
@@ -123,7 +123,7 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
   doc.setTextColor(...dark)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(recibo.descricao ?? 'Consulta Psicológica', 28, y)
+  doc.text(recibo.descricao ?? 'Consulta', 28, y)
   doc.text(format(parseISO(recibo.data_emissao), 'dd/MM/yyyy'), pw - 70, y)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
@@ -141,7 +141,7 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(...gray)
-  doc.text('Emitido em conformidade com a Resolução CFP nº 11/2018', pw / 2, y, { align: 'center' })
+  doc.text('Recibo de prestação de serviços de saúde', pw / 2, y, { align: 'center' })
   y += 5
   doc.text(`Emitido em: ${format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`, pw / 2, y, { align: 'center' })
   y += 20
@@ -153,7 +153,7 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
   y += 4
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...gray)
-  doc.text(`Psicólogo(a) — CRP ${psicologo.crp ?? ''}`, pw / 2, y, { align: 'center' })
+  doc.text(`Profissional de Saúde${psicologo.crp ? ' — ' + psicologo.crp : ''}`, pw / 2, y, { align: 'center' })
 
   doc.save(`recibo-${String(recibo.numero).padStart(6, '0')}-${recibo.paciente?.nome?.replace(/\s+/g, '-') ?? 'paciente'}.pdf`)
 }
