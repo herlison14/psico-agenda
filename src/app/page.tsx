@@ -74,7 +74,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <span className="inline-block bg-[#EBF5EF] text-[#2D6A52] text-xs font-semibold px-3 py-1.5 rounded-full mb-6 tracking-wide uppercase">
-          3 dias grátis — sem cartão
+          7 dias grátis — sem cartão
         </span>
         <h1 className="text-4xl sm:text-5xl font-bold text-[#1B3A2F] leading-tight mb-5">
           Gestão de agenda para<br />
@@ -87,7 +87,7 @@ export default function HomePage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href="/login"
+            href="/register"
             className="inline-flex items-center justify-center gap-2 bg-[#1B3A2F] text-white px-8 py-3.5 rounded-xl font-medium hover:bg-[#244D3F] transition-colors"
           >
             Começar grátis <ChevronRight className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function HomePage() {
       <section className="bg-[#1B3A2F] text-white py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-3">Simples e acessível</h2>
-          <p className="text-[#A8D5BC] mb-8">3 dias grátis, depois apenas R$ 49,90/mês. Cancele quando quiser.</p>
+          <p className="text-[#A8D5BC] mb-8">7 dias grátis, depois apenas R$ 50,00/mês. Cancele quando quiser.</p>
           <div className="grid sm:grid-cols-3 gap-4 mb-8 text-left">
             {['Agenda ilimitada', 'Pacientes ilimitados', 'Recibos em PDF', 'Agente WhatsApp (July)', 'Prontuário por IA', 'Exportação Carnê-Leão'].map(f => (
               <div key={f} className="flex items-center gap-2 text-sm text-[#D4EDE0]">
@@ -267,14 +267,14 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <Link href="/login" className="inline-flex items-center gap-2 bg-[#5A9E7C] text-white px-8 py-3.5 rounded-xl font-medium hover:bg-[#4A8E6C] transition-colors">
+          <Link href="/register" className="inline-flex items-center gap-2 bg-[#5A9E7C] text-white px-8 py-3.5 rounded-xl font-medium hover:bg-[#4A8E6C] transition-colors">
             Criar conta grátis <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
 
       <footer className="text-center py-8 text-xs text-[#A8BFB2]">
-        © 2026 PsiPlanner · <Link href="/login" className="hover:underline">Entrar</Link> · <Link href="/planos" className="hover:underline">Planos</Link>
+        © 2026 PsiPlanner · <Link href="/login" className="hover:underline">Entrar</Link> · <Link href="/register" className="hover:underline">Cadastrar</Link> · <Link href="/planos" className="hover:underline">Planos</Link>
       </footer>
     </div>
   )

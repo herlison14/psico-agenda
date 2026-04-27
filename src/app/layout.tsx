@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const lora = Lora({ subsets: ['latin'], variable: '--font-lora' })
 
 export const metadata: Metadata = {
-  title: 'Psico Agenda',
-  description: 'Gestão de agenda e recibos para psicólogos',
+  title: 'PsiPlanner',
+  description: 'Gestão de agenda, pacientes e financeiro para psicólogos',
 }
 
 export default function RootLayout({

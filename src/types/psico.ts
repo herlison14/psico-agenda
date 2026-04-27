@@ -1,3 +1,5 @@
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused'
+
 export interface Psicologo {
   id: string
   nome: string | null
@@ -8,6 +10,33 @@ export interface Psicologo {
   endereco: string | null
   cidade: string | null
   estado: string | null
+  // assinatura
+  subscription_status: SubscriptionStatus | null
+  trial_start_date: string | null
+  trial_end_date: string | null
+  current_period_start: string | null
+  current_period_end: string | null
+  mercado_pago_customer_id: string | null
+  mercado_pago_subscription_id: string | null
+  // legado (manter compatibilidade com DB atual)
+  plano: string | null
+  trial_fim: string | null
+  created_at: string
+}
+
+export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'canceled' | 'refunded'
+export type PaymentMethod = 'credit_card' | 'pix' | 'boleto'
+
+export interface Payment {
+  id: string
+  psicologo_id: string
+  mercado_pago_payment_id: string | null
+  amount_brl: number
+  currency: string
+  status: PaymentStatus
+  payment_method: PaymentMethod | null
+  charge_date: string
+  paid_date: string | null
   created_at: string
 }
 
