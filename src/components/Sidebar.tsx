@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, CalendarDays, Users, FileText,
-  DollarSign, UserCircle, LogOut, Menu, X, Brain, Zap,
+  DollarSign, UserCircle, LogOut, Menu, X, Brain, Zap, Clock,
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import { QRCodeSVG } from 'qrcode.react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,16 +19,24 @@ const navItems = [
   { href: '/perfil', label: 'Meu Perfil', icon: UserCircle },
 ]
 
+const PLANOS_URL = 'https://www.psiplanner.com.br/planos'
+
 export default function Sidebar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [novasSessoes, setNovasSessoes] = useState(0)
   const [plano, setPlano] = useState<string | null>(null)
+  const [trialFim, setTrialFim] = useState<Date | null>(null)
 
+  // Carrega plano e trial_fim
   useEffect(() => {
     fetch('/api/psicologos')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.plano) setPlano(d.plano) })
+      .then(d => {
+        if (!d) return
+        if (d.plano) setPlano(d.plano)
+        if (d.trial_fim) setTrialFim(new Date(d.trial_fim))
+      })
       .catch(() => null)
   }, [])
 
@@ -58,23 +67,33 @@ export default function Sidebar() {
     await signOut({ callbackUrl: '/login' })
   }
 
+  // Calcula dias restantes do trial (arredonda para cima)
+  const diasRestantes = trialFim
+    ? Math.max(0, Math.ceil((trialFim.getTime() - Date.now()) / 86_400_000))
+    : null
+
+  // Cores do timer conforme urgência
+  const timerColor =
+    diasRestantes === null ? ''
+    : diasRestantes <= 2  ? 'text-red-400 border-red-500/40 bg-red-500/10'
+    : diasRestantes <= 5  ? 'text-amber-400 border-amber-500/40 bg-amber-500/10'
+    : 'text-[#93c5fd] border-white/10 bg-white/5'
+
   const NavContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-y-auto">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-7 border-b border-white/10">
+      <div className="flex items-center gap-3 px-6 py-7 border-b border-white/10 shrink-0">
         <div className="bg-[#3b82f6] rounded-xl p-2 shadow-inner">
           <Brain className="w-5 h-5 text-white" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-white font-semibold text-base leading-tight tracking-wide">
-            PsiPlanner
-          </p>
+          <p className="text-white font-semibold text-base leading-tight tracking-wide">PsiPlanner</p>
           <p className="text-[#93c5fd] text-xs font-light mt-0.5">Gestão em saúde</p>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4 py-5 space-y-1">
+      <nav className="px-4 py-5 space-y-1">
         {navItems.map(({ href, label, icon: Icon, badge }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           const showBadge = badge && novasSessoes > 0 && !active
@@ -100,26 +119,62 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Upgrade / Plano */}
-      <div className="px-4 pb-3">
-        {plano === 'pro' ? (
+      {/* Card de trial + QR code (só para não-pro) */}
+      {plano !== 'pro' && diasRestantes !== null && (
+        <div className="px-4 pb-4">
+          <Link href="/planos" className="block group">
+            <div className={`rounded-2xl border p-4 transition-all group-hover:brightness-110 ${timerColor}`}>
+              {/* Timer */}
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  {diasRestantes === 0
+                    ? 'Trial expirado'
+                    : diasRestantes === 1
+                    ? '1 dia restante'
+                    : `${diasRestantes} dias restantes`}
+                </span>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex justify-center mb-3">
+                <div className="bg-white rounded-xl p-2 shadow-sm">
+                  <QRCodeSVG
+                    value={PLANOS_URL}
+                    size={112}
+                    bgColor="#ffffff"
+                    fgColor="#1e3a8a"
+                    level="M"
+                  />
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-wider opacity-90">
+                  Renove aqui
+                </p>
+                <p className="text-[10px] opacity-60 mt-0.5">
+                  Aponte a câmera ou clique
+                </p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      )}
+
+      {/* Badge Pro */}
+      {plano === 'pro' && (
+        <div className="px-4 pb-3">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10">
             <Zap className="w-4 h-4 text-[#fbbf24] shrink-0" strokeWidth={2} />
             <span className="text-sm font-medium text-[#fbbf24]">Plano Pro ativo</span>
           </div>
-        ) : (
-          <Link
-            href="/planos"
-            className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors"
-          >
-            <Zap className="w-4 h-4 shrink-0" strokeWidth={2} />
-            Assinar Pro — R$ 50/mês
-          </Link>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Logout */}
-      <div className="px-4 py-4 border-t border-white/10">
+      <div className="px-4 py-4 border-t border-white/10 mt-auto shrink-0">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-[#93c5fd] hover:bg-white/10 hover:text-white transition-all duration-150"
