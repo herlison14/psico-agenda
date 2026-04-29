@@ -7,7 +7,11 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const pathname = nextUrl.pathname
-      const isAuthPage = pathname.startsWith('/login')
+      const isAuthPage =
+        pathname.startsWith('/login') ||
+        pathname.startsWith('/register') ||
+        pathname.startsWith('/recuperar-senha') ||
+        pathname.startsWith('/nova-senha')
       const isApiAuth = pathname.startsWith('/api/auth')
       const isAgenteApi = pathname.startsWith('/api/agente')
       const isApiRoute = pathname.startsWith('/api/')

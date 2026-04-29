@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import pool from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { sendPasswordResetEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req)
@@ -41,12 +42,10 @@ export async function POST(req: NextRequest) {
       [psicologoId, token, expiresAt]
     )
 
-    const baseUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? ''
+    const baseUrl = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? '').replace(/\/$/, '')
     const resetUrl = `${baseUrl}/nova-senha?token=${token}`
 
-    // TODO: Integrar serviço de e-mail (Resend, SendGrid).
-    // Por enquanto loga para debug em desenvolvimento.
-    console.log(`[forgot-password] Reset link for ${email}: ${resetUrl}`)
+    await sendPasswordResetEmail(email, resetUrl)
 
     return NextResponse.json({ ok: true })
   } catch (err) {
