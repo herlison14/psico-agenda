@@ -114,7 +114,7 @@ Data/hora atual: ${agora}`
 
   try {
     const { text } = await generateText({
-      model: anthropic('claude-haiku-4-5'),
+      model: anthropic('claude-haiku-4.5'),
       system: systemPrompt,
       messages: [
         ...history.slice(-10).map((m) => ({ role: m.role, content: m.content })),
@@ -123,7 +123,7 @@ Data/hora atual: ${agora}`
       stopWhen: stepCountIs(6),
       tools: {
         verificar_horarios: tool({
-          description: 'Verifica os horários disponíveis para agendamento nos próximos dias (segunda a sexta).',
+          description: 'Verifica os horários disponíveis para agendamento nos próximos dias (segunda a sexta). Retorna lista de slots com data_hora_utc — use esse valor EXATO em agendar_sessao.',
           inputSchema: z.object({
             dias: z.number().min(1).max(30).default(7).describe('Quantos dias à frente buscar'),
           }),
@@ -139,41 +139,71 @@ Data/hora atual: ${agora}`
               [psicologo_id, agora.toISOString(), limite.toISOString()],
             )
 
-            const ocupados = new Set(rows.map((s) => new Date(s.data_hora).toISOString()))
-            const slots: { data: string; hora: string; data_hora: string }[] = []
+            // node-postgres retorna TIMESTAMPTZ como Date — normaliza para ISO sem ambiguidade
+            const ocupados = new Set(
+              rows.map((s) => (s.data_hora instanceof Date ? s.data_hora : new Date(s.data_hora + 'Z')).toISOString())
+            )
+
+            const slots: { descricao: string; data_hora_utc: string }[] = []
 
             for (let d = 1; d <= dias && slots.length < 20; d++) {
-              const dia = new Date(agora)
-              dia.setDate(dia.getDate() + d)
-              dia.setUTCHours(3, 0, 0, 0) // meia-noite BRT (UTC-3) = 03:00 UTC
-              const dow = dia.getUTCDay()
+              // Calcula o dia em UTC para evitar mix de local/UTC
+              const baseMs = agora.getTime()
+              const diaMs = baseMs + d * 86_400_000
+              const dia = new Date(diaMs)
+              // Zera para meia-noite BRT (03:00 UTC)
+              const diaUTC = new Date(Date.UTC(dia.getUTCFullYear(), dia.getUTCMonth(), dia.getUTCDate(), 3, 0, 0, 0))
+              const dow = diaUTC.getUTCDay()
               if (dow === 0 || dow === 6) continue
+
               for (const hora of HORARIOS_PADRAO) {
-                const slot = new Date(dia)
-                slot.setUTCHours(hora + 3, 0, 0, 0) // hora BRT → UTC
+                const slot = new Date(Date.UTC(
+                  diaUTC.getUTCFullYear(), diaUTC.getUTCMonth(), diaUTC.getUTCDate(),
+                  hora + 3, 0, 0, 0  // hora BRT → UTC (+3)
+                ))
                 if (!ocupados.has(slot.toISOString())) {
-                  slots.push({
-                    data: dia.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' }),
-                    hora: `${hora.toString().padStart(2, '0')}:00`,
-                    data_hora: slot.toISOString(),
+                  const label = slot.toLocaleString('pt-BR', {
+                    timeZone: 'America/Sao_Paulo',
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
                   })
+                  slots.push({ descricao: label, data_hora_utc: slot.toISOString() })
                 }
               }
             }
-            return { slots: slots.slice(0, 20) }
+            return {
+              slots: slots.slice(0, 20),
+              instrucao: 'Use o campo data_hora_utc EXATO em agendar_sessao. Nunca construa uma data manualmente.',
+            }
           },
         }),
 
         agendar_sessao: tool({
-          description: 'Agenda uma sessão. Use somente após o paciente confirmar explicitamente o horário.',
+          description: 'Agenda uma sessão. Use SOMENTE o campo data_hora_utc retornado por verificar_horarios — nunca construa a data manualmente.',
           inputSchema: z.object({
-            data_hora: z.string().describe('Data e hora em ISO 8601 (ex: 2026-04-21T09:00:00.000Z)'),
+            data_hora_utc: z.string().describe('Valor EXATO do campo data_hora_utc retornado por verificar_horarios (ISO 8601 UTC)'),
             observacoes: z.string().optional().describe('Observações opcionais'),
           }),
-          execute: async ({ data_hora, observacoes }) => {
+          execute: async ({ data_hora_utc, observacoes }) => {
+            // Valida que o horário é um slot BRT válido (horas UTC esperadas: 11-20)
+            const dt = new Date(data_hora_utc)
+            if (isNaN(dt.getTime())) return { erro: 'data_hora_utc inválido.' }
+
+            const horaUTC = dt.getUTCHours()
+            const minutosUTC = dt.getUTCMinutes()
+            const horasUtcValidas = HORARIOS_PADRAO.map(h => h + 3) // [11,12,13,14,17,18,19,20]
+            if (!horasUtcValidas.includes(horaUTC) || minutosUTC !== 0) {
+              return {
+                erro: `Horário inválido (${horaUTC}:${minutosUTC} UTC). Use exatamente o campo data_hora_utc retornado por verificar_horarios.`,
+              }
+            }
+
             const conflito = await pool.query(
               `SELECT id FROM sessoes WHERE psicologo_id = $1 AND status = 'agendado' AND data_hora = $2`,
-              [psicologo_id, data_hora],
+              [psicologo_id, dt.toISOString()],
             )
             if (conflito.rows.length > 0)
               return { erro: 'Horário já ocupado, por favor escolha outro.' }
@@ -181,9 +211,9 @@ Data/hora atual: ${agora}`
             const { rows } = await pool.query(
               `INSERT INTO sessoes (psicologo_id, paciente_id, data_hora, duracao_min, valor, observacoes, status)
                VALUES ($1, $2, $3, 50, $4, $5, 'agendado') RETURNING id, data_hora`,
-              [psicologo_id, pacienteId, data_hora, valorSessao, observacoes || null],
+              [psicologo_id, pacienteId, dt.toISOString(), valorSessao, observacoes || null],
             )
-            const dt = new Date(rows[0].data_hora).toLocaleString('pt-BR', {
+            const dtFormatada = new Date(rows[0].data_hora).toLocaleString('pt-BR', {
               timeZone: 'America/Sao_Paulo',
               weekday: 'long',
               day: '2-digit',
@@ -191,7 +221,7 @@ Data/hora atual: ${agora}`
               hour: '2-digit',
               minute: '2-digit',
             })
-            return { sucesso: true, sessao_id: rows[0].id, data_hora_formatada: dt }
+            return { sucesso: true, sessao_id: rows[0].id, data_hora_formatada: dtFormatada }
           },
         }),
 

@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     SELECT s.*, row_to_json(p.*) as paciente
     FROM sessoes s
     LEFT JOIN pacientes p ON p.id = s.paciente_id
-    WHERE s.psicologo_id = $1
+    WHERE s.psicologo_id = $1 AND s.deleted_at IS NULL
   `
   const values: (string | null)[] = [session.user.id]
   let idx = 2
