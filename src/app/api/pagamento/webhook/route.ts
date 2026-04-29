@@ -8,6 +8,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 503 })
   }
 
+  // Valida token de segurança do webhook
+  const webhookToken = process.env.ASAAS_WEBHOOK_TOKEN
+  if (webhookToken) {
+    const authHeader = req.headers.get('asaas-access-token') ?? req.headers.get('authorization') ?? ''
+    const receivedToken = authHeader.replace(/^Bearer\s+/i, '')
+    if (receivedToken !== webhookToken) {
+      console.warn('[webhook/asaas] token inválido')
+      return NextResponse.json({ ok: false }, { status: 401 })
+    }
+  }
+
   let body: { event?: string; payment?: { id?: string; externalReference?: string; status?: string } }
   try {
     body = await req.json()
