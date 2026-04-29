@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
-import { Brain, Loader2 } from 'lucide-react'
+import { Brain, Loader2, CalendarDays, ArrowRight } from 'lucide-react'
 
 const SYMBOLS = [
   { char: 'ψ', label: 'Psicologia' },
@@ -28,6 +28,17 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
+  const [codigo, setCodigo] = useState('')
+
+  function handlePaciente(e: React.FormEvent) {
+    e.preventDefault()
+    const val = codigo.trim()
+    if (!val) return
+    // Aceita tanto o código UUID quanto a URL completa
+    const match = val.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)
+    const id = match ? match[1] : val
+    window.location.assign(`/agendar/${id}`)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -191,6 +202,36 @@ export default function LoginPage() {
                 Criar conta grátis — 7 dias
               </Link>
             </p>
+          </div>
+
+          {/* ── Box do paciente ── */}
+          <div className="w-full max-w-sm mt-4 rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md px-6 py-5 shadow-xl">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="bg-[#3b82f6]/80 rounded-lg p-1.5">
+                <CalendarDays className="w-4 h-4 text-white" strokeWidth={1.75} />
+              </div>
+              <p className="text-white font-semibold text-sm leading-tight">
+                Agende e acompanhe sua consulta por aqui
+              </p>
+            </div>
+            <p className="text-white/60 text-xs mb-4 leading-relaxed">
+              Cole o link enviado pelo seu profissional de saúde ou digite o código de agendamento.
+            </p>
+            <form onSubmit={handlePaciente} className="flex gap-2">
+              <input
+                type="text"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
+                placeholder="Link ou código do profissional"
+                className="flex-1 bg-white/20 border border-white/30 rounded-xl px-3 py-2.5 text-white placeholder:text-white/40 text-xs outline-none focus:ring-2 focus:ring-white/40 transition-all"
+              />
+              <button
+                type="submit"
+                className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-xl px-3 py-2.5 transition-colors flex items-center"
+              >
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
           </div>
         </div>
       </div>
