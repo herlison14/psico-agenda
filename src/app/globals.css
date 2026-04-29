@@ -17,3 +17,14 @@ body {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
 }
+
+@keyframes scroll-symbols {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.symbols-carousel {
+  animation: scroll-symbols 40s linear infinite;
+  will-change: transform;
+}
+
