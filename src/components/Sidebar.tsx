@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, CalendarDays, Users, FileText,
-  DollarSign, UserCircle, LogOut, Menu, X, Brain,
+  DollarSign, UserCircle, LogOut, Menu, X, Brain, Zap,
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
@@ -22,6 +22,14 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [novasSessoes, setNovasSessoes] = useState(0)
+  const [plano, setPlano] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/psicologos')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.plano) setPlano(d.plano) })
+      .catch(() => null)
+  }, [])
 
   useEffect(() => { setOpen(false) }, [pathname])
 
@@ -92,8 +100,26 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Upgrade / Plano */}
+      <div className="px-4 pb-3">
+        {plano === 'pro' ? (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10">
+            <Zap className="w-4 h-4 text-[#fbbf24] shrink-0" strokeWidth={2} />
+            <span className="text-sm font-medium text-[#fbbf24]">Plano Pro ativo</span>
+          </div>
+        ) : (
+          <Link
+            href="/planos"
+            className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors"
+          >
+            <Zap className="w-4 h-4 shrink-0" strokeWidth={2} />
+            Assinar Pro — R$ 50/mês
+          </Link>
+        )}
+      </div>
+
       {/* Logout */}
-      <div className="px-4 py-5 border-t border-white/10">
+      <div className="px-4 py-4 border-t border-white/10">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-[#93c5fd] hover:bg-white/10 hover:text-white transition-all duration-150"
