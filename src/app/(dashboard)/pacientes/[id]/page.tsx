@@ -9,6 +9,7 @@ import {
   ArrowLeft, BookOpen, CalendarDays, FileEdit, Loader2, Save, X,
   CheckCircle2, XCircle, UserX, Clock
 } from 'lucide-react'
+import GravadorConsulta from '@/components/GravadorConsulta'
 
 const STATUS_BADGE: Record<string, string> = {
   realizado: 'bg-[#eff6ff] text-[#2563eb]',
@@ -40,6 +41,7 @@ export default function HistoricoPage() {
   const [editando, setEditando] = useState<Sessao | null>(null)
   const [notas, setNotas] = useState('')
   const [saving, setSaving] = useState(false)
+  const [transcricao, setTranscricao] = useState('')
 
   async function load() {
     setLoading(true)
@@ -70,6 +72,12 @@ export default function HistoricoPage() {
   function abrirEdicao(sessao: Sessao) {
     setEditando(sessao)
     setNotas(sessao.notas_clinicas ?? '')
+    setTranscricao('')
+  }
+
+  function handleTranscrito(soap: string, transcricaoRaw: string) {
+    setNotas(soap)
+    setTranscricao(transcricaoRaw)
   }
 
   async function salvar() {
@@ -226,7 +234,14 @@ export default function HistoricoPage() {
                 <X className="w-5 h-5" strokeWidth={1.75} />
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-6 space-y-4">
+              {/* Gravador de áudio */}
+              <GravadorConsulta
+                sessaoId={editando.id}
+                onTranscrito={handleTranscrito}
+              />
+
+              {/* Textarea do prontuário */}
               <textarea
                 value={notas}
                 onChange={e => setNotas(e.target.value)}
@@ -235,8 +250,22 @@ export default function HistoricoPage() {
                 placeholder="Registre a evolução clínica, técnicas utilizadas, observações da sessão, plano terapêutico..."
                 className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none resize-none leading-relaxed"
               />
-              <p className="text-xs text-[#94a3b8] mt-1.5">Confidencial — visível apenas para você.</p>
-              <div className="flex justify-end gap-3 mt-4">
+
+              {/* Transcrição bruta colapsável */}
+              {transcricao && (
+                <details className="group">
+                  <summary className="cursor-pointer text-xs text-[#64748b] hover:text-[#2563eb] select-none list-none flex items-center gap-1.5">
+                    <span className="transition-transform group-open:rotate-90 inline-block">›</span>
+                    Ver transcrição original
+                  </summary>
+                  <div className="mt-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3 max-h-40 overflow-y-auto">
+                    <p className="text-xs text-[#475569] leading-relaxed whitespace-pre-wrap">{transcricao}</p>
+                  </div>
+                </details>
+              )}
+
+              <p className="text-xs text-[#94a3b8]">Confidencial — visível apenas para você.</p>
+              <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setEditando(null)}
                   className="px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#F5F0EB] rounded-xl transition-colors"
