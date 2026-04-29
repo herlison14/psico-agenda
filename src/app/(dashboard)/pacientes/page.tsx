@@ -45,7 +45,7 @@ export default function PacientesPage() {
         return
       }
       const data = await res.json()
-      setPacientes(Array.isArray(data) ? data : [])
+      setPacientes(Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []))
     } catch (err) {
       console.error('[loadPacientes]', err)
       setPacientes([])
