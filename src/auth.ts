@@ -33,6 +33,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const valid = await compare(credentials.password as string, user.password_hash)
           if (!valid) return null
 
+          // Registra último login (coluna adicionada via migração lazy do painel admin)
+          pool.query(
+            'UPDATE psicologos SET last_login_at = NOW() WHERE id = $1',
+            [user.id],
+          ).catch(() => null) // silencioso se coluna ainda não existir
+
           return { id: String(user.id), email: user.email }
         } catch (err) {
           console.error('[auth.authorize] DB/hash error:', err)

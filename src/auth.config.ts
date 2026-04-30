@@ -25,6 +25,8 @@ export const authConfig: NextAuthConfig = {
       // NextAuth, agente e agendamento público devem sempre passar
       if (isApiAuth || isAgenteApi) return true
       if (pathname.startsWith('/agendar')) return true
+      // Admin tem autenticação própria
+      if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) return true
 
       // Rotas de API sem auth retornam 401 JSON (não redirect)
       if (isApiRoute && !isLoggedIn)
