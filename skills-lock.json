@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "skills": {
+    "caveman": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/caveman/SKILL.md",
+      "computedHash": "536908fcfcb232600a5875aa85f1fd50fd13305e9d67379bcd95f07c8c916f3f"
+    },
+    "caveman-token-optimizer": {
+      "source": "aradotso/trending-skills",
+      "sourceType": "github",
+      "skillPath": "skills/caveman-token-optimizer/SKILL.md",
+      "computedHash": "73dd10a1284fbff3df4822443bdcb83f58eec1e99c7514fca6384194937c8fab"
+    },
+    "code-review-graph": {
+      "source": "aradotso/trending-skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-review-graph/SKILL.md",
+      "computedHash": "2ef5ff05a35e0769608daf223242803e4a908fca110ff967595a0471cb38daf5"
+    },
+    "code-simplifier": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/code-simplifier/SKILL.md",
+      "computedHash": "f228e4ad6007876f8d31412f023b4decf338d5879941dbcf1a88bf603ec769df"
+    },
+    "context-mode": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/context-mode/SKILL.md",
+      "computedHash": "f3870052f510d416984aa64e4675a2e2da437d6f0bfab73b439bfa57af0a754d"
+    },
+    "context-mode-ops": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/context-mode-ops/SKILL.md",
+      "computedHash": "aa82e1e4ccce0b426805781ae13c71114c31630d306468d75c65781104ae4815"
+    },
+    "ctx-doctor": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/ctx-doctor/SKILL.md",
+      "computedHash": "ccdb54dde1ba540ce143a42cc90f9c363a49977c51b56fb2d8d2a20cfea66e54"
+    },
+    "ctx-insight": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/ctx-insight/SKILL.md",
+      "computedHash": "1913c21de9d15ebf226eb82e89a7536a77ca96e8cc4f449c3077ce94d6a76f5c"
+    },
+    "ctx-purge": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/ctx-purge/SKILL.md",
+      "computedHash": "b6d10f48787bbe8f1f58e039eedd0a808b0d962e10a035af5a6aecd3175cef07"
+    },
+    "ctx-stats": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/ctx-stats/SKILL.md",
+      "computedHash": "688761c1b6590738855da468c51acd855f19dd686fcd9f14c0e83cc89aaf6008"
+    },
+    "ctx-upgrade": {
+      "source": "mksglu/context-mode",
+      "sourceType": "github",
+      "skillPath": "skills/ctx-upgrade/SKILL.md",
+      "computedHash": "2113c6b0d6dbf0efbac1a611a4bd142be7ca9b3f1431bd5d065806525bd9bcce"
+    },
+    "design-patterns": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/design-patterns/SKILL.md",
+      "computedHash": "29c9bc54519dbb750c48df9472b9d17917327a5d8d74769e4c4fcd01575717b4"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "issue-triage": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/issue-triage/SKILL.md",
+      "computedHash": "f5f5d2b9fb579c5309040d948f1c21ec4d2eddf8ea02c11af852665c0cf7c464"
+    },
+    "pr-triage": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/pr-triage/SKILL.md",
+      "computedHash": "ccf0299f327fdb9cfac42433460e7434a88a378f8bbd41e440a117e0ff369358"
+    },
+    "rtk-tdd": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/rtk-tdd/SKILL.md",
+      "computedHash": "451993a2a5bb54b0e2161e8fb83ba3eed58dfee365496d8bfaae6a0f1f1d4f80"
+    },
+    "rtk-triage": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/rtk-triage/SKILL.md",
+      "computedHash": "344655403297eaf5cfc00bab10c536de6d81590ff19b8a5879cd0dbebd2b40b2"
+    },
+    "tailwind-design-system": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/tailwind-design-system/SKILL.md",
+      "computedHash": "563dd03393259e3c4798ad0e08f3289c2ebd28633a3f48859523ea2a2d54d664"
+    },
+    "tdd-rust": {
+      "source": "rtk-ai/rtk",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/tdd-rust/SKILL.md",
+      "computedHash": "3a2e2eb6839afca75f0bd55b81a9d3ec8311f563302a47190368d15cb4e89a76"
+    },
+    "ui-design": {
+      "source": "shajith003/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "ui-design/SKILL.md",
+      "computedHash": "44b4e7f6fe923ac179a556feeea1feecf10227fceca0fc890abf921895d6a665"
+    }
+  }
+}

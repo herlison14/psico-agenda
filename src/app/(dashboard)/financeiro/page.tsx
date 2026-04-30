@@ -6,6 +6,9 @@ import { Sessao } from '@/types/psico'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { DollarSign, TrendingUp, CalendarCheck, Download, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatCard } from '@/components/ui/stat-card'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function FinanceiroPage() {
   const { data: session } = useSession()
@@ -25,10 +28,7 @@ export default function FinanceiroPage() {
         if (cancelled) return
         setSessoes(Array.isArray(data) ? (data as Sessao[]) : [])
       })
-      .catch(err => {
-        console.error('[GET /api/sessoes financeiro]', err)
-        if (!cancelled) setSessoes([])
-      })
+      .catch(() => { if (!cancelled) setSessoes([]) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [mes, ano, session])
@@ -44,6 +44,7 @@ export default function FinanceiroPage() {
 
   const receita = sessoes.reduce((acc, s) => acc + Number(s.valor), 0)
   const ticketMedio = sessoes.length > 0 ? receita / sessoes.length : 0
+  const nomeMes = format(new Date(ano, mes, 1), 'MMMM yyyy', { locale: ptBR })
 
   function exportarCSV() {
     const cabecalho = 'Data,Nome do Paciente,CPF do Paciente,Valor,Descrição'
@@ -55,7 +56,7 @@ export default function FinanceiroPage() {
       return [data, nome, cpf, valor, 'Consulta'].join(',')
     })
     const csv = [cabecalho, ...linhas].join('\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -64,91 +65,130 @@ export default function FinanceiroPage() {
     URL.revokeObjectURL(url)
   }
 
-  const nomeMes = format(new Date(ano, mes, 1), 'MMMM yyyy', { locale: ptBR })
+  const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <DollarSign className="w-6 h-6 text-indigo-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Financeiro</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => mudarMes(-1)} className="p-2 hover:bg-gray-100 rounded-lg"><ChevronLeft className="w-5 h-5" /></button>
-          <span className="text-sm font-semibold text-gray-700 capitalize min-w-36 text-center">{nomeMes}</span>
-          <button onClick={() => mudarMes(1)} className="p-2 hover:bg-gray-100 rounded-lg"><ChevronRight className="w-5 h-5" /></button>
+      <PageHeader title="Financeiro" subtitle={`Competência: ${nomeMes}`} icon={DollarSign}>
+        {/* Navegação de mês */}
+        <div className="flex items-center gap-1 bg-white border border-[--color-border] rounded-xl px-1 py-1">
           <button
-            onClick={exportarCSV}
-            disabled={sessoes.length === 0}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            onClick={() => mudarMes(-1)}
+            className="p-1.5 rounded-lg text-[--color-text-muted] hover:bg-[--color-surface-2] hover:text-[--color-text-primary] transition-colors"
+            aria-label="Mês anterior"
           >
-            <Download className="w-4 h-4" /> Exportar Carnê-Leão
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm font-semibold text-[--color-text-primary] capitalize min-w-32 text-center px-1">
+            {nomeMes}
+          </span>
+          <button
+            onClick={() => mudarMes(1)}
+            className="p-1.5 rounded-lg text-[--color-text-muted] hover:bg-[--color-surface-2] hover:text-[--color-text-primary] transition-colors"
+            aria-label="Próximo mês"
+          >
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-      </div>
 
+        {/* Exportar */}
+        <button
+          onClick={exportarCSV}
+          disabled={sessoes.length === 0}
+          className="btn-primary"
+        >
+          <Download className="w-4 h-4" />
+          Exportar Carnê-Leão
+        </button>
+      </PageHeader>
+
+      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-          <div className="bg-green-50 rounded-lg p-3"><DollarSign className="w-6 h-6 text-green-600" /></div>
-          <div>
-            <p className="text-sm text-gray-500">Receita total</p>
-            <p className="text-2xl font-bold text-gray-900">{receita.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-          <div className="bg-blue-50 rounded-lg p-3"><CalendarCheck className="w-6 h-6 text-blue-600" /></div>
-          <div>
-            <p className="text-sm text-gray-500">Sessões realizadas</p>
-            <p className="text-2xl font-bold text-gray-900">{sessoes.length}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-          <div className="bg-indigo-50 rounded-lg p-3"><TrendingUp className="w-6 h-6 text-indigo-600" /></div>
-          <div>
-            <p className="text-sm text-gray-500">Ticket médio</p>
-            <p className="text-2xl font-bold text-gray-900">{ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-          </div>
-        </div>
+        <StatCard
+          label="Receita total"
+          value={fmt(receita)}
+          icon={DollarSign}
+          iconBg="bg-[--color-success-bg]"
+          iconColor="text-[--color-success]"
+        />
+        <StatCard
+          label="Sessões realizadas"
+          value={sessoes.length}
+          icon={CalendarCheck}
+          iconBg="bg-[--color-info-bg]"
+          iconColor="text-[--color-info]"
+        />
+        <StatCard
+          label="Ticket médio"
+          value={fmt(ticketMedio)}
+          icon={TrendingUp}
+          iconBg="bg-[--color-navy-light]"
+          iconColor="text-[--color-navy]"
+        />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900 capitalize">Sessões realizadas — {nomeMes}</h2>
+      {/* Tabela */}
+      <div className="card overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[--color-border-soft]">
+          <h2 className="font-semibold text-[--color-text-primary] capitalize">
+            Sessões realizadas — {nomeMes}
+          </h2>
+          <span className="text-xs text-[--color-text-muted]">
+            {sessoes.length} sessão{sessoes.length !== 1 ? 'ões' : ''}
+          </span>
         </div>
+
         {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+          <div className="flex items-center justify-center h-36">
+            <Spinner />
           </div>
         ) : sessoes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-            <CalendarCheck className="w-10 h-10 mb-3 opacity-40" />
-            <p>Nenhuma sessão realizada neste mês</p>
+          <div className="flex flex-col items-center justify-center py-14 gap-2">
+            <CalendarCheck className="w-10 h-10 text-[--color-text-faint] opacity-40" strokeWidth={1.5} />
+            <p className="text-sm text-[--color-text-muted]">Nenhuma sessão realizada neste mês</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+            <table className="table-base">
+              <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Data</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Paciente</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">CPF</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Valor</th>
+                  <th>Data</th>
+                  <th>Paciente</th>
+                  <th className="hidden sm:table-cell">CPF</th>
+                  <th className="text-right">Valor</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {sessoes.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-600">{format(parseISO(s.data_hora), 'dd/MM/yyyy HH:mm')}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{s.paciente?.nome}</td>
-                    <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{s.paciente?.cpf || '—'}</td>
-                    <td className="px-4 py-3 font-semibold text-gray-800">{Number(s.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                  <tr key={s.id}>
+                    <td className="whitespace-nowrap">
+                      {format(parseISO(s.data_hora), "dd/MM/yyyy 'às' HH:mm")}
+                    </td>
+                    <td className="font-medium text-[--color-text-primary]">
+                      {s.paciente?.nome}
+                    </td>
+                    <td className="hidden sm:table-cell text-[--color-text-muted]">
+                      {s.paciente?.cpf || '—'}
+                    </td>
+                    <td className="text-right font-semibold text-[--color-text-primary]">
+                      {fmt(Number(s.valor))}
+                    </td>
                   </tr>
                 ))}
-                <tr className="bg-gray-50 border-t-2 border-gray-200">
-                  <td colSpan={3} className="px-4 py-3 font-semibold text-gray-700">Total</td>
-                  <td className="px-4 py-3 font-bold text-green-700 text-base">{receita.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                </tr>
               </tbody>
+              <tfoot>
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="px-5 py-3 text-sm font-semibold text-[--color-text-secondary] border-t-2 border-[--color-border] bg-[--color-surface-2]"
+                  >
+                    Total do mês
+                  </td>
+                  <td className="px-5 py-3 text-right font-bold text-base text-[--color-success] border-t-2 border-[--color-border] bg-[--color-surface-2]">
+                    {fmt(receita)}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
