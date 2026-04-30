@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import pool from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { isDemoMode, DEMO_SESSOES } from '@/lib/mockData'
+import { ensureSessoesSchema } from '@/lib/ensure-schema'
 
 export async function GET(req: NextRequest) {
   if (isDemoMode()) {
@@ -33,6 +34,8 @@ export async function GET(req: NextRequest) {
 
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  await ensureSessoesSchema()
 
   const { searchParams } = req.nextUrl
   const inicio = searchParams.get('inicio')

@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import pool from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { isDemoMode, DEMO_PACIENTES } from '@/lib/mockData'
+import { ensurePacientesSchema } from '@/lib/ensure-schema'
 
 export async function GET(req: NextRequest) {
   if (isDemoMode()) return NextResponse.json(DEMO_PACIENTES)
@@ -9,7 +10,9 @@ export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { searchParams } = req.nextUrl
+  await ensurePacientesSchema()
+
+  const { searchParams } = await Promise.resolve(req.nextUrl)
   const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '100'), 1), 200)
   const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'), 0)
   const busca = searchParams.get('busca')?.trim() ?? ''
