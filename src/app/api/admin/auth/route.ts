@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const { senha } = await req.json()
   const masterKey = process.env.ADMIN_MASTER_KEY ?? ''
 
-  if (!masterKey || senha !== masterKey) {
+  if (!masterKey || senha.trim() !== masterKey.trim()) {
     return NextResponse.json({ error: 'Senha incorreta.' }, { status: 401 })
   }
 
