@@ -37,6 +37,10 @@ export async function ensureSessoesSchema() {
     'sessoes_notas_clinicas',
     'ALTER TABLE sessoes ADD COLUMN IF NOT EXISTS notas_clinicas TEXT',
   )
+  await run(
+    'sessoes_pagamento_status',
+    `ALTER TABLE sessoes ADD COLUMN IF NOT EXISTS pagamento_status TEXT NOT NULL DEFAULT 'pendente'`,
+  )
 }
 
 export async function ensurePsicologosSchema() {
@@ -55,5 +59,17 @@ export async function ensurePsicologosSchema() {
   await run(
     'psicologos_last_login',
     'ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ',
+  )
+  await run(
+    'psicologos_instagram',
+    'ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS instagram TEXT',
+  )
+  await run(
+    'psicologos_linkedin',
+    'ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS linkedin TEXT',
+  )
+  await run(
+    'psicologos_site_url',
+    'ALTER TABLE psicologos ADD COLUMN IF NOT EXISTS site_url TEXT',
   )
 }

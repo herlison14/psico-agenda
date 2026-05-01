@@ -26,10 +26,20 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
+const ALLOWED_STATUS = new Set(['agendado', 'realizado', 'cancelado', 'faltou'])
+const ALLOWED_PAGAMENTO = new Set(['pendente', 'pago', 'isento'])
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
-  const { status, notas_clinicas } = body
+  const { status, notas_clinicas, pagamento_status } = body
+
+  if (status !== undefined && !ALLOWED_STATUS.has(status)) {
+    return NextResponse.json({ error: 'Status inválido.' }, { status: 400 })
+  }
+  if (pagamento_status !== undefined && !ALLOWED_PAGAMENTO.has(pagamento_status)) {
+    return NextResponse.json({ error: 'Status de pagamento inválido.' }, { status: 400 })
+  }
 
   if (isDemoMode()) {
     const sessao = DEMO_SESSOES.find(s => s.id === id)
@@ -48,6 +58,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   let idx = 1
   if (status !== undefined) { updates.push(`status=$${idx++}`); values.push(status) }
   if (notas_clinicas !== undefined) { updates.push(`notas_clinicas=$${idx++}`); values.push(notas_clinicas) }
+  if (pagamento_status !== undefined) { updates.push(`pagamento_status=$${idx++}`); values.push(pagamento_status) }
 
   if (updates.length === 0) {
     return NextResponse.json({ error: 'Nenhum campo para atualizar.' }, { status: 400 })

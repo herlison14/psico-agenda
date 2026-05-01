@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Paciente } from '@/types/psico'
-import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus, BookOpen } from 'lucide-react'
+import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus, BookOpen, Trash2 } from 'lucide-react'
 
 function maskCPF(v: string) {
   return v.replace(/\D/g, '').slice(0, 11)
@@ -33,6 +33,7 @@ export default function PacientesPage() {
   const [form, setForm] = useState<Partial<Paciente>>(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [erro, setErro] = useState('')
 
   async function loadPacientes() {
@@ -89,6 +90,26 @@ export default function PacientesPage() {
       setErro('Erro de conexão. Tente novamente.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!editId) return
+    if (!confirm('Excluir este paciente? Esta ação não pode ser desfeita.')) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/pacientes/${editId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setErro(data.error ?? 'Erro ao excluir paciente.')
+        return
+      }
+      setModalOpen(false)
+      loadPacientes()
+    } catch {
+      setErro('Erro de conexão. Tente novamente.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -287,22 +308,39 @@ export default function PacientesPage() {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2.5 rounded-xl text-sm">{erro}</div>
               )}
 
-              <div className="flex justify-end gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#F5F0EB] rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all disabled:opacity-60"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {editId ? 'Salvar alterações' : 'Cadastrar paciente'}
-                </button>
+              <div className="flex items-center justify-between gap-3 pt-1">
+                {/* Excluir — só aparece na edição */}
+                {editId ? (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting || saving}
+                    className="flex items-center gap-1.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    {deleting
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Trash2 className="w-4 h-4" strokeWidth={1.75} />}
+                    Excluir
+                  </button>
+                ) : <span />}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#F5F0EB] rounded-xl transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving || deleting}
+                    className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all disabled:opacity-60"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {editId ? 'Salvar alterações' : 'Cadastrar paciente'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

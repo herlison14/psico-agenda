@@ -11,7 +11,10 @@ export async function GET() {
 
   try {
     const { rows } = await pool.query(
-      `SELECT r.*, row_to_json(p.*) as paciente
+      `SELECT
+         r.id, r.psicologo_id, r.paciente_id, r.sessao_id,
+         r.numero, r.valor, r.data_emissao, r.descricao, r.created_at,
+         json_build_object('id', p.id, 'nome', p.nome, 'cpf', p.cpf, 'email', p.email) AS paciente
        FROM recibos r
        LEFT JOIN pacientes p ON p.id = r.paciente_id
        WHERE r.psicologo_id = $1

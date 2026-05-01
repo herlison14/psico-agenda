@@ -134,7 +134,8 @@ export default function LoginPage() {
 
         {/* Painel direito — formulário */}
         <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-sm bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl px-8 py-10">
+          <div className="w-full max-w-sm flex flex-col gap-4">
+          <div className="w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl px-8 py-10">
 
             <div className="flex items-center gap-3 mb-8 lg:hidden">
               <div className="bg-[#1e3a8a] rounded-xl p-2">
@@ -205,7 +206,7 @@ export default function LoginPage() {
           </div>
 
           {/* ── Box do paciente ── */}
-          <div className="w-full max-w-sm mt-4 rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md px-6 py-5 shadow-xl">
+          <div className="w-full rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md px-6 py-5 shadow-xl">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="bg-[#3b82f6]/80 rounded-lg p-1.5">
                 <CalendarDays className="w-4 h-4 text-white" strokeWidth={1.75} />
@@ -233,6 +234,7 @@ export default function LoginPage() {
               </button>
             </form>
           </div>
+          </div> {/* fecha flex-col wrapper */}
         </div>
       </div>
     </div>

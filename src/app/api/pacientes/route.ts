@@ -12,14 +12,16 @@ export async function GET(req: NextRequest) {
 
   await ensurePacientesSchema()
 
-  const { searchParams } = await Promise.resolve(req.nextUrl)
+  const searchParams = req.nextUrl.searchParams
   const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '100'), 1), 200)
   const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'), 0)
   const busca = searchParams.get('busca')?.trim() ?? ''
+  const apenasAtivos = searchParams.get('ativo') === 'true'
 
   try {
     const values: unknown[] = [session.user.id]
     let where = 'WHERE psicologo_id = $1 AND deleted_at IS NULL'
+    if (apenasAtivos) where += ' AND ativo = true'
     if (busca) {
       values.push(`%${busca}%`)
       where += ` AND (nome ILIKE $${values.length} OR telefone ILIKE $${values.length} OR email ILIKE $${values.length})`
@@ -48,6 +50,8 @@ export async function POST(req: NextRequest) {
 
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  await ensurePacientesSchema()
 
   const { nome, cpf, email, telefone, valor_sessao } = await req.json()
   if (!nome?.trim()) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })

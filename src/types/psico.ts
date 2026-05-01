@@ -18,6 +18,10 @@ export interface Psicologo {
   current_period_end: string | null
   mercado_pago_customer_id: string | null
   mercado_pago_subscription_id: string | null
+  // redes sociais
+  instagram: string | null
+  linkedin: string | null
+  site_url: string | null
   // legado (manter compatibilidade com DB atual)
   plano: string | null
   trial_fim: string | null
@@ -60,6 +64,7 @@ export interface Sessao {
   duracao_min: number
   valor: number
   status: 'agendado' | 'realizado' | 'cancelado' | 'faltou'
+  pagamento_status: 'pendente' | 'pago' | 'isento'
   observacoes: string | null
   notas_clinicas: string | null
   created_at: string

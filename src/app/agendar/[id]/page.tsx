@@ -1,13 +1,34 @@
 'use client'
 
 import { useState, useRef, useEffect, use } from 'react'
-import { Brain, Send, Loader2, ArrowRight } from 'lucide-react'
+import { Brain, Send, Loader2, ArrowRight, Globe, ExternalLink } from 'lucide-react'
+
+const IconInstagram = () => (
+  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+)
+
+const IconLinkedin = () => (
+  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+)
 
 type Msg = { role: 'user' | 'assistant'; content: string }
+
+type PsicPublico = {
+  nome: string | null
+  crp: string | null
+  instagram: string | null
+  linkedin: string | null
+  site_url: string | null
+}
 
 export default function AgendarPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: psicologoId } = use(params)
 
+  const [psicologo, setPsicologo] = useState<PsicPublico | null>(null)
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [identificado, setIdentificado] = useState(false)
@@ -17,6 +38,14 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
   const [pacienteId, setPacienteId] = useState<string | null>(null)
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  // Carrega dados públicos do profissional
+  useEffect(() => {
+    fetch(`/api/psicologos/publico/${psicologoId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data && !data.error) setPsicologo(data) })
+      .catch(() => {})
+  }, [psicologoId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -29,7 +58,8 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
     setIdentificado(true)
     setLoading(true)
 
-    const saudacao = `Olá, ${nome.split(' ')[0]}! 😊 Sou a July, assistente virtual. Como posso te ajudar hoje? Gostaria de agendar uma consulta, verificar um agendamento existente ou cancelar/reagendar?`
+    const primeiroNome = psicologo?.nome ? psicologo.nome.split(' ')[0] : 'seu psicólogo'
+    const saudacao = `Olá, ${nome.split(' ')[0]}! 😊 Sou a July, assistente virtual de ${primeiroNome}. Como posso te ajudar hoje? Gostaria de agendar uma consulta, verificar um agendamento existente ou cancelar/reagendar?`
     setMsgs([{ role: 'assistant', content: saudacao }])
     setLoading(false)
   }
@@ -72,14 +102,68 @@ export default function AgendarPage({ params }: { params: Promise<{ id: string }
     }
   }
 
+  // Redes sociais clicáveis
+  const socialLinks = [
+    psicologo?.instagram && {
+      href: `https://instagram.com/${psicologo.instagram.replace(/^@/, '')}`,
+      icon: <IconInstagram />,
+      label: `@${psicologo.instagram.replace(/^@/, '')}`,
+      color: 'hover:text-[#e1306c]',
+    },
+    psicologo?.linkedin && {
+      href: psicologo.linkedin.startsWith('http') ? psicologo.linkedin : `https://${psicologo.linkedin}`,
+      icon: <IconLinkedin />,
+      label: 'LinkedIn',
+      color: 'hover:text-[#0077b5]',
+    },
+    psicologo?.site_url && {
+      href: psicologo.site_url.startsWith('http') ? psicologo.site_url : `https://${psicologo.site_url}`,
+      icon: <Globe className="w-4 h-4" />,
+      label: 'Site',
+      color: 'hover:text-[#2563eb]',
+    },
+  ].filter(Boolean) as { href: string; icon: React.ReactNode; label: string; color: string }[]
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center px-4 py-10">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-8">
-        <div className="bg-[#1e3a8a] rounded-xl p-2">
-          <Brain className="w-4 h-4 text-white" strokeWidth={1.5} />
+
+      {/* Logo + Info do profissional */}
+      <div className="flex flex-col items-center gap-2 mb-8">
+        <div className="flex items-center gap-2.5">
+          <div className="bg-[#1e3a8a] rounded-xl p-2">
+            <Brain className="w-4 h-4 text-white" strokeWidth={1.5} />
+          </div>
+          <span className="font-semibold text-[#1e3a8a] text-lg">PsiPlanner</span>
         </div>
-        <span className="font-semibold text-[#1e3a8a] text-lg">PsiPlanner</span>
+
+        {psicologo?.nome && (
+          <div className="text-center">
+            <p className="text-sm font-semibold text-[#0f172a]">{psicologo.nome}</p>
+            {psicologo.crp && (
+              <p className="text-xs text-[#64748b]">CRP {psicologo.crp}</p>
+            )}
+          </div>
+        )}
+
+        {/* Redes sociais */}
+        {socialLinks.length > 0 && (
+          <div className="flex items-center gap-3 mt-1">
+            {socialLinks.map((s) => (
+              <a
+                key={s.href}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-1.5 text-[#64748b] text-xs font-medium transition-colors ${s.color} group`}
+                title={s.label}
+              >
+                <span className="text-[#94a3b8] group-hover:inherit transition-colors">{s.icon}</span>
+                <span className="hidden sm:inline">{s.label}</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="w-full max-w-md">

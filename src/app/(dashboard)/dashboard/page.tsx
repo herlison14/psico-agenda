@@ -7,7 +7,7 @@ import { format, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   CalendarDays, DollarSign, FileText, Clock,
-  Users, UserX, Link2, Copy, Check,
+  Users, UserX, Link2, Copy, Check, Banknote,
 } from 'lucide-react'
 import Link from 'next/link'
 import { StatCard } from '@/components/ui/stat-card'
@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [recibosCount, setRecibosCount]   = useState(0)
   const [pacientesAtivos, setPacientes]   = useState(0)
   const [faltasMes, setFaltasMes]         = useState(0)
+  const [pendentesMes, setPendentesMes]   = useState({ valor: 0, count: 0 })
   const [psicologo, setPsicologo]         = useState<Psicologo | null>(null)
   const [loading, setLoading]             = useState(true)
   const [erro, setErro]                   = useState<string | null>(null)
@@ -53,14 +54,13 @@ export default function DashboardPage() {
       const mes    = format(now, 'yyyy-MM')
 
       try {
-        const [psicRes, sessoesRes, realizadasRes, recibosRes, pacientesRes, faltasRes] =
+        const [psicRes, sessoesRes, todasMesRes, recibosRes, pacientesRes] =
           await Promise.all([
             safeJson<Psicologo>('/api/psicologos'),
             safeJson<Sessao[]>(`/api/sessoes?inicio=${inicio}&fim=${fim}`),
-            safeJson<Sessao[]>(`/api/sessoes?mes=${mes}&status=realizado`),
+            safeJson<Sessao[]>(`/api/sessoes?mes=${mes}`),
             safeJson<{ created_at: string }[]>('/api/recibos'),
             safeJson<{ ativo: boolean; data?: unknown[] }>('/api/pacientes'),
-            safeJson<Sessao[]>(`/api/sessoes?mes=${mes}&status=faltou`),
           ])
 
         if (cancelled) return
@@ -69,8 +69,23 @@ export default function DashboardPage() {
 
         if (Array.isArray(sessoesRes)) setSessoesHoje(sessoesRes)
 
-        if (Array.isArray(realizadasRes))
-          setReceitaMes(realizadasRes.reduce((acc, s) => acc + Number(s.valor), 0))
+        if (Array.isArray(todasMesRes)) {
+          // Receita do mês = realizadas + pagas
+          const recebidas = todasMesRes.filter(s =>
+            s.status === 'realizado' && (s.pagamento_status ?? 'pendente') === 'pago'
+          )
+          setReceitaMes(recebidas.reduce((acc, s) => acc + Number(s.valor), 0))
+
+          // A receber = agendadas + realizadas pendentes
+          const aReceber = todasMesRes.filter(s =>
+            s.status === 'agendado' ||
+            (s.status === 'realizado' && (s.pagamento_status ?? 'pendente') === 'pendente')
+          )
+          setPendentesMes({ valor: aReceber.reduce((a, s) => a + Number(s.valor), 0), count: aReceber.length })
+
+          // Faltas no mês
+          setFaltasMes(todasMesRes.filter(s => s.status === 'faltou').length)
+        }
 
         if (Array.isArray(recibosRes)) {
           const now2 = new Date()
@@ -89,8 +104,6 @@ export default function DashboardPage() {
             ? (pacientesRes as { data: { ativo: boolean }[] }).data
             : []
         setPacientes((pacArr as { ativo: boolean }[]).filter(p => p.ativo).length)
-
-        if (Array.isArray(faltasRes)) setFaltasMes(faltasRes.length)
       } catch (err) {
         console.error('[dashboard load]', err)
         if (!cancelled) setErro('Não foi possível carregar os dados. Tente recarregar a página.')
@@ -125,7 +138,7 @@ export default function DashboardPage() {
       {/* Saudação */}
       <div className="mb-8">
         <h1 className="font-display text-2xl text-[--color-text-primary]">
-          Bom dia{psicologo?.nome ? `, ${psicologo.nome.split(' ')[0]}` : ''} 👋
+          {(() => { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite' })()} {psicologo?.nome ? `, ${psicologo.nome.split(' ')[0]}` : ''} 👋
         </h1>
         <p className="text-sm text-[--color-text-muted] mt-1 capitalize">
           {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -133,7 +146,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <StatCard label="Sessões hoje"    value={sessoesHoje.length}  icon={CalendarDays} />
         <StatCard
           label="Receita do mês"
@@ -141,6 +154,13 @@ export default function DashboardPage() {
           icon={DollarSign}
           iconBg="bg-[--color-success-bg]"
           iconColor="text-[--color-success]"
+        />
+        <StatCard
+          label="A receber"
+          value={fmt(pendentesMes.valor)}
+          icon={Banknote}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
         />
         <StatCard
           label="Recibos emitidos"

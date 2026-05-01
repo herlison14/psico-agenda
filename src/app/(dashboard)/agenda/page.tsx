@@ -7,7 +7,7 @@ import {
   format, addDays, startOfWeek, isSameDay, parseISO, setHours, setMinutes
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, X, Loader2, CalendarDays, CheckCircle2, XCircle, UserX, FileEdit, Save, Mic } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Loader2, CalendarDays, CheckCircle2, XCircle, UserX, FileEdit, Save, Mic, Banknote, CircleCheck, Gift } from 'lucide-react'
 
 const HORAS = Array.from({ length: 16 }, (_, i) => i + 7)
 const STATUS_COLORS: Record<string, string> = {
@@ -45,6 +45,23 @@ export default function AgendaPage() {
   const [transcrevendo, setTranscrevendo] = useState(false)
   const audioInputRef = useRef<HTMLInputElement>(null)
 
+  const PAGAMENTO_CONFIG = {
+    pendente: { label: 'Pendente', icon: Banknote,    cls: 'bg-amber-50 border-amber-200 text-amber-700' },
+    pago:     { label: 'Pago',     icon: CircleCheck,  cls: 'bg-green-50 border-green-200 text-green-700' },
+    isento:   { label: 'Isento',   icon: Gift,         cls: 'bg-slate-100 border-slate-200 text-slate-500' },
+  } as const
+
+  async function alterarPagamento(sessao: Sessao, novo: Sessao['pagamento_status']) {
+    await fetch(`/api/sessoes/${sessao.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pagamento_status: novo }),
+    })
+    // Atualiza localmente para feedback imediato
+    setModalDetalhe(prev => prev ? { ...prev, pagamento_status: novo } : prev)
+    setSessoes(prev => prev.map(s => s.id === sessao.id ? { ...s, pagamento_status: novo } : s))
+  }
+
   const diasSemana = Array.from({ length: 7 }, (_, i) => addDays(semanaInicio, i))
 
 
@@ -73,8 +90,14 @@ export default function AgendaPage() {
   useEffect(() => {
     let cancelled = false
     fetch('/api/pacientes?ativo=true')
-      .then(r => r.ok ? r.json() : [])
-      .then(data => { if (!cancelled && Array.isArray(data)) setPacientes(data) })
+      .then(r => r.ok ? r.json() : { data: [] })
+      .then(data => {
+        if (!cancelled) {
+          // A API retorna { data, total, limit, offset } — extrair o array
+          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+          setPacientes(list)
+        }
+      })
       .catch(err => console.error('[GET /api/pacientes]', err))
     return () => { cancelled = true }
   }, [session])
@@ -278,7 +301,12 @@ export default function AgendaPage() {
                         onClick={() => setModalDetalhe(s)}
                         className={`w-full text-left px-1.5 py-1 rounded border text-xs truncate leading-tight ${STATUS_COLORS[s.status]}`}
                       >
-                        {s.paciente?.nome?.split(' ')[0]}
+                        <span className="flex items-center justify-between gap-1">
+                          <span className="truncate">{s.paciente?.nome?.split(' ')[0]}</span>
+                          {s.status === 'realizado' && s.pagamento_status === 'pendente' && (
+                            <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500" title="Pagamento pendente" />
+                          )}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -372,6 +400,33 @@ export default function AgendaPage() {
                 <span className="text-[#64748b]">Status</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[modalDetalhe.status]}`}>{STATUS_LABEL[modalDetalhe.status]}</span>
               </div>
+              {/* Pagamento — só para sessões realizadas */}
+              {modalDetalhe.status === 'realizado' && (
+                <div className="pt-2 border-t border-[#f1f5f9]">
+                  <p className="text-[#64748b] text-xs mb-2 font-medium uppercase tracking-wide">Pagamento</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['pendente', 'pago', 'isento'] as const).map(op => {
+                      const cfg = PAGAMENTO_CONFIG[op]
+                      const ativo = (modalDetalhe.pagamento_status ?? 'pendente') === op
+                      return (
+                        <button
+                          key={op}
+                          onClick={() => alterarPagamento(modalDetalhe, op)}
+                          className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                            ativo
+                              ? `${cfg.cls} ring-2 ring-offset-1 ring-current`
+                              : 'bg-white border-[#e2e8f0] text-[#94a3b8] hover:border-[#cbd5e1]'
+                          }`}
+                        >
+                          <cfg.icon className="w-4 h-4" strokeWidth={1.75} />
+                          {cfg.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               {modalDetalhe.observacoes && (
                 <div className="pt-1 border-t border-[#f1f5f9]">
                   <p className="text-[#64748b] text-xs mb-1">Observações</p>

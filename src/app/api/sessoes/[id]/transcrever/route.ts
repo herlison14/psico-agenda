@@ -18,6 +18,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const audioFile = formData.get('audio') as File | null
   if (!audioFile) return NextResponse.json({ error: 'Arquivo de áudio obrigatório.' }, { status: 400 })
 
+  // Validação: tamanho máximo 25 MB (limite do Groq Whisper)
+  const MAX_BYTES = 25 * 1024 * 1024
+  if (audioFile.size > MAX_BYTES) {
+    return NextResponse.json({ error: 'Arquivo de áudio muito grande. Limite: 25 MB.' }, { status: 413 })
+  }
+
+  // Validação: apenas tipos de áudio permitidos
+  // Extrai só o tipo base antes do ';' (ex: "audio/webm;codecs=opus" → "audio/webm")
+  const ALLOWED_TYPES = new Set([
+    'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/wav', 'audio/webm',
+    'audio/ogg', 'audio/flac', 'audio/x-m4a', 'video/mp4', 'video/webm',
+  ])
+  const fileType = (audioFile.type || '').split(';')[0].trim().toLowerCase()
+  if (fileType && !ALLOWED_TYPES.has(fileType)) {
+    return NextResponse.json({ error: 'Tipo de arquivo não suportado.' }, { status: 415 })
+  }
+
   const groqKey = process.env.GROQ_API_KEY
   if (!groqKey) return NextResponse.json({ error: 'GROQ_API_KEY não configurada.' }, { status: 500 })
 

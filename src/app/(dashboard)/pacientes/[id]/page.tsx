@@ -7,27 +7,33 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   ArrowLeft, BookOpen, CalendarDays, FileEdit, Loader2, Save, X,
-  CheckCircle2, XCircle, UserX, Clock
+  CheckCircle2, XCircle, UserX, Clock, Banknote, CircleCheck, Gift,
 } from 'lucide-react'
 import GravadorConsulta from '@/components/GravadorConsulta'
 
 const STATUS_BADGE: Record<string, string> = {
   realizado: 'bg-[#eff6ff] text-[#2563eb]',
-  agendado: 'bg-blue-50 text-blue-700',
+  agendado:  'bg-blue-50 text-blue-700',
   cancelado: 'bg-red-50 text-red-700',
-  faltou: 'bg-orange-50 text-orange-700',
+  faltou:    'bg-orange-50 text-orange-700',
 }
 const STATUS_LABEL: Record<string, string> = {
   realizado: 'Realizado',
-  agendado: 'Agendado',
+  agendado:  'Agendado',
   cancelado: 'Cancelado',
-  faltou: 'Faltou',
+  faltou:    'Faltou',
 }
 const STATUS_ICON: Record<string, React.ReactNode> = {
   realizado: <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2} />,
-  agendado: <CalendarDays className="w-3.5 h-3.5" strokeWidth={2} />,
-  cancelado: <XCircle className="w-3.5 h-3.5" strokeWidth={2} />,
-  faltou: <UserX className="w-3.5 h-3.5" strokeWidth={2} />,
+  agendado:  <CalendarDays className="w-3.5 h-3.5" strokeWidth={2} />,
+  cancelado: <XCircle      className="w-3.5 h-3.5" strokeWidth={2} />,
+  faltou:    <UserX        className="w-3.5 h-3.5" strokeWidth={2} />,
+}
+
+const PAG_CONFIG: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
+  pendente: { label: 'Pendente', cls: 'bg-amber-50 text-amber-700 hover:bg-amber-100',   icon: <Banknote    className="w-3 h-3" /> },
+  pago:     { label: 'Pago',     cls: 'bg-green-50 text-green-700 hover:bg-green-100',   icon: <CircleCheck className="w-3 h-3" /> },
+  isento:   { label: 'Isento',   cls: 'bg-slate-50  text-slate-500  hover:bg-slate-100', icon: <Gift        className="w-3 h-3" /> },
 }
 
 export default function HistoricoPage() {
@@ -38,10 +44,11 @@ export default function HistoricoPage() {
   const [sessoes, setSessoes] = useState<Sessao[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [editando, setEditando] = useState<Sessao | null>(null)
-  const [notas, setNotas] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [editando, setEditando]       = useState<Sessao | null>(null)
+  const [notas, setNotas]             = useState('')
+  const [saving, setSaving]           = useState(false)
   const [transcricao, setTranscricao] = useState('')
+  const [atualizandoPag, setAtualizandoPag] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -93,8 +100,28 @@ export default function HistoricoPage() {
     load()
   }
 
+  async function alterarPagamento(sessao: Sessao) {
+    if (sessao.status !== 'realizado') return
+    const ciclo: Sessao['pagamento_status'][] = ['pendente', 'pago', 'isento']
+    const proximo = ciclo[(ciclo.indexOf(sessao.pagamento_status ?? 'pendente') + 1) % 3]
+    setSessoes(prev => prev.map(s => s.id === sessao.id ? { ...s, pagamento_status: proximo } : s))
+    setAtualizandoPag(sessao.id)
+    try {
+      await fetch(`/api/sessoes/${sessao.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pagamento_status: proximo }),
+      })
+    } catch {
+      setSessoes(prev => prev.map(s => s.id === sessao.id ? { ...s, pagamento_status: sessao.pagamento_status } : s))
+    } finally {
+      setAtualizandoPag(null)
+    }
+  }
+
   const realizadas = sessoes.filter(s => s.status === 'realizado')
-  const comNotas = realizadas.filter(s => s.notas_clinicas)
+  const comNotas   = realizadas.filter(s => s.notas_clinicas)
+  const pendentes  = realizadas.filter(s => (s.pagamento_status ?? 'pendente') === 'pendente')
 
   return (
     <div>
@@ -126,7 +153,7 @@ export default function HistoricoPage() {
       ) : (
         <>
           {/* Resumo */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 text-center">
               <p className="text-2xl font-bold text-[#0f172a]">{sessoes.length}</p>
               <p className="text-xs text-[#64748b] mt-0.5">Total de sessões</p>
@@ -134,6 +161,10 @@ export default function HistoricoPage() {
             <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 text-center">
               <p className="text-2xl font-bold text-[#2563eb]">{realizadas.length}</p>
               <p className="text-xs text-[#64748b] mt-0.5">Realizadas</p>
+            </div>
+            <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 text-center">
+              <p className="text-2xl font-bold text-amber-600">{pendentes.length}</p>
+              <p className="text-xs text-amber-500 mt-0.5">Pagamentos pendentes</p>
             </div>
             <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 text-center">
               <p className="text-2xl font-bold text-[#3b82f6]">{comNotas.length}</p>
@@ -170,11 +201,30 @@ export default function HistoricoPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      {/* Badge status da sessão */}
                       <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[sessao.status]}`}>
                         {STATUS_ICON[sessao.status]}
                         {STATUS_LABEL[sessao.status]}
                       </span>
+
+                      {/* Badge pagamento — clicável para alternar */}
+                      {sessao.status === 'realizado' && (() => {
+                        const pag = PAG_CONFIG[sessao.pagamento_status ?? 'pendente'] ?? PAG_CONFIG.pendente
+                        const busy = atualizandoPag === sessao.id
+                        return (
+                          <button
+                            onClick={() => alterarPagamento(sessao)}
+                            disabled={busy}
+                            title="Clique para alterar o status de pagamento"
+                            className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-colors disabled:opacity-50 ${pag.cls}`}
+                          >
+                            {pag.icon}
+                            {pag.label}
+                          </button>
+                        )
+                      })()}
+
                       {sessao.status === 'realizado' && (
                         <button
                           onClick={() => abrirEdicao(sessao)}

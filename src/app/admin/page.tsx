@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Shield, Users, TrendingUp, LogOut, RefreshCw,
-  Crown, FlaskConical, Clock, Ban, RotateCcw, ChevronUp, ChevronDown,
-  Eye, EyeOff, CheckCircle2,
+  Crown, FlaskConical, Clock, Ban, RotateCcw,
+  Eye, EyeOff, ChevronUp, ChevronDown, Unlock, KeyRound,
 } from 'lucide-react'
 
 type Stats = {
@@ -19,12 +19,6 @@ type Usuario = {
 }
 
 type SortKey = keyof Pick<Usuario, 'nome' | 'plano' | 'created_at' | 'last_login_at' | 'total_sessoes'>
-
-const PLANO_BADGE: Record<string, { label: string; cls: string }> = {
-  trial:     { label: 'Trial',     cls: 'bg-amber-100 text-amber-800' },
-  pro:       { label: 'Pro',       cls: 'bg-emerald-100 text-emerald-800' },
-  bloqueado: { label: 'Bloqueado', cls: 'bg-red-100 text-red-700' },
-}
 
 function diasRestantes(trialFim: string | null): number | null {
   if (!trialFim) return null
@@ -44,6 +38,12 @@ function fmtDatetime(d: string | null) {
   })
 }
 
+const PLANO_SELECT_CLS: Record<string, string> = {
+  trial:     'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  pro:       'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  bloqueado: 'bg-red-500/15 text-red-300 border-red-500/30',
+}
+
 export default function AdminPage() {
   const [authed, setAuthed]       = useState(false)
   const [checking, setChecking]   = useState(true)
@@ -61,7 +61,6 @@ export default function AdminPage() {
   const [sortAsc, setSortAsc]     = useState(false)
   const [acaoId, setAcaoId]       = useState<string | null>(null)
 
-  // Verifica token existente
   useEffect(() => {
     fetch('/api/admin/stats')
       .then(r => { if (r.ok) setAuthed(true) })
@@ -93,8 +92,8 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ senha }),
     })
-    if (res.ok) { setAuthed(true) }
-    else { setLoginErr('Senha incorreta.') }
+    if (res.ok) setAuthed(true)
+    else setLoginErr('Senha incorreta.')
     setLoggingIn(false)
   }
 
@@ -105,24 +104,57 @@ export default function AdminPage() {
     setUsuarios([])
   }
 
-  async function acao(id: string, tipo: string) {
+  async function acao(id: string, tipo: string, confirmMsg?: string) {
+    if (confirmMsg && !confirm(confirmMsg)) return
     setAcaoId(id + tipo)
-    await fetch(`/api/admin/usuarios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao: tipo }),
-    })
-    setAcaoId(null)
-    carregar()
+    try {
+      await fetch(`/api/admin/usuarios/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: tipo }),
+      })
+      await carregar()
+    } finally {
+      setAcaoId(null)
+    }
   }
 
-  // Sort + filtro
+  async function gerarLinkReset(u: Usuario) {
+    if (!confirm(`Gerar link de redefinição de senha para ${u.email}?`)) return
+    setAcaoId(u.id + 'link_reset')
+    try {
+      const res = await fetch(`/api/admin/usuarios/${u.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'link_reset' }),
+      })
+      const data = await res.json()
+      if (data.link) {
+        await navigator.clipboard.writeText(data.link).catch(() => null)
+        alert(`✅ Link copiado para a área de transferência!\n\nSe não copiou, copie manualmente:\n\n${data.link}`)
+      } else {
+        alert('Erro ao gerar link: ' + (data.error ?? 'desconhecido'))
+      }
+    } finally {
+      setAcaoId(null)
+    }
+  }
+
+  async function handlePlanoChange(u: Usuario, novoPlano: string) {
+    if (novoPlano === u.plano) return
+    const mapa: Record<string, string> = { pro: 'pro', trial: 'trial', bloqueado: 'bloquear' }
+    const acaoTipo = mapa[novoPlano]
+    if (!acaoTipo) return
+    const label = novoPlano === 'bloqueado' ? 'Bloquear' : `Mudar para ${novoPlano}`
+    await acao(u.id, acaoTipo, `${label}: ${u.nome}?`)
+  }
+
   const lista = usuarios
     .filter(u => {
       const q = busca.toLowerCase()
       const matchBusca = !q || u.nome?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
-      const matchPlano = filtroPlano === 'todos' || filtroPlano === 'teste'
-        ? filtroPlano === 'teste' ? u.is_teste : true
+      const matchPlano = filtroPlano === 'todos' ? true
+        : filtroPlano === 'teste' ? u.is_teste
         : u.plano === filtroPlano
       return matchBusca && matchPlano
     })
@@ -144,7 +176,6 @@ export default function AdminPage() {
       : <ChevronDown className="w-3 h-3 text-indigo-400" />
   }
 
-  // ── Loading inicial ────────────────────────────────────────────────
   if (checking) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -153,7 +184,6 @@ export default function AdminPage() {
     )
   }
 
-  // ── Login ──────────────────────────────────────────────────────────
   if (!authed) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
@@ -199,7 +229,6 @@ export default function AdminPage() {
     )
   }
 
-  // ── Dashboard ──────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
@@ -238,11 +267,11 @@ export default function AdminPage() {
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-              { label: 'Total cadastros',  value: stats.total,        icon: Users,        color: 'text-slate-300' },
-              { label: 'Em trial',         value: stats.trial,        icon: Clock,        color: 'text-amber-400' },
-              { label: 'Pro (pagantes)',   value: stats.pro,          icon: Crown,        color: 'text-emerald-400' },
-              { label: 'Equipe teste',     value: stats.teste,        icon: FlaskConical, color: 'text-indigo-400' },
-              { label: 'Novos (30 dias)',  value: stats.novos_30d,    icon: TrendingUp,   color: 'text-sky-400' },
+              { label: 'Total',          value: stats.total,           icon: Users,        color: 'text-slate-300' },
+              { label: 'Em trial',       value: stats.trial,           icon: Clock,        color: 'text-amber-400' },
+              { label: 'Pro (pagantes)', value: stats.pro,             icon: Crown,        color: 'text-emerald-400' },
+              { label: 'Equipe teste',   value: stats.teste,           icon: FlaskConical, color: 'text-indigo-400' },
+              { label: 'Bloqueados',     value: stats.bloqueado,       icon: Ban,          color: 'text-red-400' },
               {
                 label: 'Receita mensal',
                 value: `R$ ${Number(stats.receita_mensal).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`,
@@ -292,19 +321,19 @@ export default function AdminPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wider">
-                  {[
-                    { label: 'Nome / E-mail', key: 'nome' as SortKey },
-                    { label: 'Plano',         key: 'plano' as SortKey },
+                  {([
+                    { label: 'Nome / E-mail',  key: 'nome' as SortKey },
+                    { label: 'Plano',          key: 'plano' as SortKey },
                     { label: 'Trial restante', key: null },
-                    { label: 'Sessões',       key: 'total_sessoes' as SortKey },
-                    { label: 'Último login',  key: 'last_login_at' as SortKey },
-                    { label: 'Cadastro',      key: 'created_at' as SortKey },
-                    { label: 'Ações',         key: null },
-                  ].map(({ label, key }) => (
+                    { label: 'Sessões / Pac.', key: 'total_sessoes' as SortKey },
+                    { label: 'Último login',   key: 'last_login_at' as SortKey },
+                    { label: 'Cadastro',       key: 'created_at' as SortKey },
+                    { label: 'Ações extras',   key: null },
+                  ] as { label: string; key: SortKey | null }[]).map(({ label, key }) => (
                     <th
                       key={label}
                       onClick={() => key && toggleSort(key)}
-                      className={`px-4 py-3 text-left font-medium ${key ? 'cursor-pointer hover:text-white' : ''}`}
+                      className={`px-4 py-3 text-left font-medium whitespace-nowrap ${key ? 'cursor-pointer hover:text-white' : ''}`}
                     >
                       <span className="flex items-center gap-1">
                         {label}
@@ -317,134 +346,168 @@ export default function AdminPage() {
               <tbody className="divide-y divide-slate-800">
                 {lista.map(u => {
                   const dias = diasRestantes(u.trial_fim)
+                  const busy = (tipo: string) => acaoId === u.id + tipo
+
                   return (
-                    <tr key={u.id} className="hover:bg-slate-800/50 transition-colors">
-                      {/* Nome / email */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <p className="font-medium text-white">
-                              {u.nome ?? '—'}
-                              {u.is_teste && (
-                                <span className="ml-2 inline-flex items-center gap-1 bg-indigo-500/20 text-indigo-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                                  <FlaskConical className="w-2.5 h-2.5" />
-                                  TESTE
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-slate-400 text-xs">{u.email}</p>
-                          </div>
-                        </div>
+                    <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
+
+                      {/* Nome / e-mail */}
+                      <td className="px-4 py-3 min-w-[180px]">
+                        <p className="font-medium text-white flex items-center gap-1.5 flex-wrap">
+                          {u.nome ?? '—'}
+                          {u.is_teste && (
+                            <span className="inline-flex items-center gap-1 bg-indigo-500/20 text-indigo-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                              <FlaskConical className="w-2.5 h-2.5" /> TESTE
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-slate-400 text-xs">{u.email}</p>
                       </td>
 
-                      {/* Plano */}
+                      {/* Plano — select direto */}
                       <td className="px-4 py-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          (PLANO_BADGE[u.plano] ?? PLANO_BADGE.trial).cls
-                        }`}>
-                          {(PLANO_BADGE[u.plano] ?? PLANO_BADGE.trial).label}
-                        </span>
+                        <select
+                          value={u.plano}
+                          disabled={!!acaoId}
+                          onChange={e => handlePlanoChange(u, e.target.value)}
+                          className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors appearance-none bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 ${
+                            PLANO_SELECT_CLS[u.plano] ?? PLANO_SELECT_CLS.trial
+                          }`}
+                        >
+                          <option value="trial">Trial</option>
+                          <option value="pro">Pro</option>
+                          <option value="bloqueado">Bloqueado</option>
+                        </select>
                       </td>
 
                       {/* Trial restante */}
-                      <td className="px-4 py-3 text-xs">
+                      <td className="px-4 py-3 text-xs whitespace-nowrap">
                         {u.plano === 'trial' && dias !== null ? (
                           <span className={
-                            dias <= 2 ? 'text-red-400 font-semibold' :
-                            dias <= 5 ? 'text-amber-400 font-semibold' :
+                            dias === 0 ? 'text-red-400 font-bold' :
+                            dias <= 3  ? 'text-red-400 font-semibold' :
+                            dias <= 7  ? 'text-amber-400 font-semibold' :
                             'text-slate-300'
                           }>
-                            {dias === 0 ? 'Expirado' : `${dias}d`}
+                            {dias === 0 ? 'Expirado' : `${dias}d restantes`}
+                            {u.trial_fim && (
+                              <span className="block text-slate-500 font-normal">{fmtDate(u.trial_fim)}</span>
+                            )}
                           </span>
                         ) : (
                           <span className="text-slate-600">—</span>
                         )}
                       </td>
 
-                      {/* Sessões */}
-                      <td className="px-4 py-3 text-slate-300 text-xs">
-                        {u.total_sessoes} sess. / {u.pacientes_ativos} pac.
+                      {/* Sessões / Pacientes */}
+                      <td className="px-4 py-3 text-slate-300 text-xs whitespace-nowrap">
+                        <span className="font-medium">{u.total_sessoes}</span> sess.
+                        <span className="text-slate-500 mx-1">/</span>
+                        <span className="font-medium">{u.pacientes_ativos}</span> pac.
                       </td>
 
                       {/* Último login */}
-                      <td className="px-4 py-3 text-slate-400 text-xs">
+                      <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">
                         {fmtDatetime(u.last_login_at)}
                       </td>
 
                       {/* Cadastro */}
-                      <td className="px-4 py-3 text-slate-400 text-xs">
+                      <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">
                         {fmtDate(u.created_at)}
                       </td>
 
-                      {/* Ações */}
+                      {/* Ações extras */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          {/* Pro */}
-                          {u.plano !== 'pro' && !u.is_teste && (
-                            <button
-                              onClick={() => acao(u.id, 'pro')}
-                              disabled={acaoId === u.id + 'pro'}
-                              title="Liberar Pro"
-                              className="p-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/25 rounded-lg transition-colors disabled:opacity-40"
-                            >
-                              <Crown className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                        <div className="flex items-center gap-1 flex-wrap">
 
-                          {/* Teste */}
+                          {/* Marcar como equipe teste (só se não é Pro já como teste) */}
                           {!u.is_teste && (
                             <button
-                              onClick={() => acao(u.id, 'teste')}
-                              disabled={acaoId === u.id + 'teste'}
-                              title="Marcar como equipe teste"
-                              className="p-1.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/25 rounded-lg transition-colors disabled:opacity-40"
+                              onClick={() => acao(u.id, 'teste', `Marcar ${u.nome} como equipe teste (Pro interno)?`)}
+                              disabled={!!acaoId}
+                              title="Marcar como equipe teste (Pro gratuito)"
+                              className="flex items-center gap-1 px-2 py-1 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
                             >
-                              <FlaskConical className="w-3.5 h-3.5" />
+                              <FlaskConical className="w-3 h-3" />
+                              Teste
                             </button>
                           )}
 
-                          {/* Já é teste */}
+                          {/* Remover flag de teste */}
                           {u.is_teste && (
-                            <span className="p-1.5 text-indigo-400" title="Equipe teste ativa">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                            </span>
+                            <button
+                              onClick={() => acao(u.id, 'remover_teste', `Remover flag de teste de ${u.nome}?`)}
+                              disabled={!!acaoId}
+                              title="Remover flag de equipe teste"
+                              className="flex items-center gap-1 px-2 py-1 bg-indigo-500/10 text-indigo-300 hover:bg-red-500/15 hover:text-red-300 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
+                            >
+                              <FlaskConical className="w-3 h-3" />
+                              Rem. Teste
+                            </button>
                           )}
 
-                          {/* Estender trial */}
+                          {/* +30 dias trial */}
                           {u.plano === 'trial' && (
                             <button
                               onClick={() => acao(u.id, 'extend')}
-                              disabled={acaoId === u.id + 'extend'}
-                              title="+30 dias de trial"
-                              className="p-1.5 bg-sky-500/10 text-sky-400 hover:bg-sky-500/25 rounded-lg transition-colors disabled:opacity-40"
+                              disabled={busy('extend') || !!acaoId}
+                              title="Adicionar 30 dias ao trial"
+                              className="flex items-center gap-1 px-2 py-1 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
                             >
-                              <Clock className="w-3.5 h-3.5" />
+                              <Clock className="w-3 h-3" />
+                              {busy('extend') ? '…' : '+30d'}
                             </button>
                           )}
 
-                          {/* Bloquear */}
-                          {u.plano !== 'bloqueado' && (
+                          {/* Pro direto */}
+                          {u.plano !== 'pro' && (
                             <button
-                              onClick={() => { if (confirm(`Bloquear ${u.nome}?`)) acao(u.id, 'bloquear') }}
-                              disabled={acaoId === u.id + 'bloquear'}
-                              title="Bloquear acesso"
-                              className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/25 rounded-lg transition-colors disabled:opacity-40"
+                              onClick={() => acao(u.id, 'pro', `Ativar Pro para ${u.nome}?`)}
+                              disabled={busy('pro') || !!acaoId}
+                              title="Ativar plano Pro"
+                              className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
                             >
-                              <Ban className="w-3.5 h-3.5" />
+                              <Crown className="w-3 h-3" />
+                              {busy('pro') ? '…' : 'Pro'}
                             </button>
                           )}
 
-                          {/* Reset */}
-                          {(u.plano !== 'trial' || u.is_teste) && (
+                          {/* Desbloquear */}
+                          {u.plano === 'bloqueado' && (
                             <button
-                              onClick={() => { if (confirm(`Resetar ${u.nome} para trial?`)) acao(u.id, 'reset') }}
-                              disabled={acaoId === u.id + 'reset'}
-                              title="Resetar para trial"
-                              className="p-1.5 bg-slate-700 text-slate-400 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-40"
+                              onClick={() => acao(u.id, 'desbloquear')}
+                              disabled={busy('desbloquear') || !!acaoId}
+                              title="Desbloquear (volta para trial)"
+                              className="flex items-center gap-1 px-2 py-1 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
                             >
-                              <RotateCcw className="w-3.5 h-3.5" />
+                              <Unlock className="w-3 h-3" />
+                              Desbloquear
                             </button>
                           )}
+
+                          {/* Reset trial */}
+                          {(u.plano === 'pro' || u.is_teste) && (
+                            <button
+                              onClick={() => acao(u.id, 'reset', `Resetar ${u.nome} para trial (14 dias)? Isso remove o plano Pro.`)}
+                              disabled={busy('reset') || !!acaoId}
+                              title="Resetar para trial com 14 dias novos"
+                              className="flex items-center gap-1 px-2 py-1 bg-slate-700/60 text-slate-400 hover:bg-slate-700 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              {busy('reset') ? '…' : 'Reset'}
+                            </button>
+                          )}
+
+                          {/* Link reset de senha */}
+                          <button
+                            onClick={() => gerarLinkReset(u)}
+                            disabled={busy('link_reset') || !!acaoId}
+                            title="Gerar link de redefinição de senha (sem email)"
+                            className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg text-xs transition-colors disabled:opacity-40 whitespace-nowrap"
+                          >
+                            <KeyRound className="w-3 h-3" />
+                            {busy('link_reset') ? '…' : 'Reset senha'}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -453,7 +516,7 @@ export default function AdminPage() {
 
                 {lista.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
+                    <td colSpan={7} className="px-4 py-14 text-center text-slate-500 text-sm">
                       Nenhum usuário encontrado.
                     </td>
                   </tr>

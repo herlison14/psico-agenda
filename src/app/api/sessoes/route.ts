@@ -63,7 +63,18 @@ export async function GET(req: NextRequest) {
     query += ` AND s.data_hora >= $${idx++} AND s.data_hora <= $${idx++}`
     values.push(start, end)
   }
-  if (status) { query += ` AND s.status = $${idx++}`; values.push(status) }
+  if (status) {
+    // suporta lista separada por vírgula: status=agendado,realizado
+    const statusList = status.split(',').map(s => s.trim()).filter(Boolean)
+    if (statusList.length === 1) {
+      query += ` AND s.status = $${idx++}`; values.push(statusList[0])
+    } else if (statusList.length > 1) {
+      const placeholders = statusList.map((_, i) => `$${idx + i}`).join(', ')
+      query += ` AND s.status IN (${placeholders})`
+      statusList.forEach(s => values.push(s))
+      idx += statusList.length
+    }
+  }
 
   query += ' ORDER BY s.data_hora'
 
