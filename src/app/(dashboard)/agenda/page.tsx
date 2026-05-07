@@ -240,8 +240,12 @@ export default function AgendaPage() {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <CalendarDays className="w-6 h-6 text-indigo-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Agenda</h1>
+          <div className="bg-[#eff6ff] rounded-xl p-2.5">
+            <CalendarDays className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-[#0f172a]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>Agenda</h1>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => setSemanaInicio(s => addDays(s, -7))} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -256,7 +260,7 @@ export default function AgendaPage() {
           </button>
           <button
             onClick={() => { setForm(EMPTY_FORM); setErro(''); setModalNova(true) }}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700"
+            className="flex items-center gap-2 bg-[#1e3a8a] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#1d4ed8]"
           >
             <Plus className="w-4 h-4" /> Nova sessão
           </button>
@@ -269,10 +273,10 @@ export default function AgendaPage() {
           {diasSemana.map((dia, i) => (
             <div
               key={i}
-              className={`p-2 text-center text-xs font-medium border-l border-gray-100 ${isSameDay(dia, new Date()) ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}
+              className={`p-2 text-center text-xs font-medium border-l border-gray-100 ${isSameDay(dia, new Date()) ? 'bg-[#eff6ff] text-[#2563eb]' : 'text-gray-500'}`}
             >
               <div>{format(dia, 'EEE', { locale: ptBR })}</div>
-              <div className={`text-base font-bold mt-0.5 ${isSameDay(dia, new Date()) ? 'text-indigo-600' : 'text-gray-800'}`}>
+              <div className={`text-base font-bold mt-0.5 ${isSameDay(dia, new Date()) ? 'text-[#2563eb]' : 'text-gray-800'}`}>
                 {format(dia, 'd')}
               </div>
             </div>
@@ -481,7 +485,8 @@ export default function AgendaPage() {
                   type="button"
                   onClick={() => audioInputRef.current?.click()}
                   disabled={transcrevendo}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 transition-colors font-medium"
+                  title="Transcreve o áudio e gera prontuário SOAP com IA"
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#eff6ff] text-[#2563eb] hover:bg-[#dbeafe] disabled:opacity-50 transition-colors font-medium"
                 >
                   {transcrevendo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mic className="w-3.5 h-3.5" />}
                   {transcrevendo ? 'Transcrevendo...' : 'Transcrever consulta'}

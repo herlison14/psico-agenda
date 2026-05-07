@@ -6,9 +6,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id: sessaoId } = await params
+  const db = (await import('@/lib/db')).default
+
+  // Gate de plano/trial — transcrição IA é recurso premium
+  const { rows: planRows } = await db.query(
+    'SELECT plano, trial_fim FROM psicologos WHERE id = $1',
+    [session.user.id]
+  )
+  if (!planRows.length) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { plano, trial_fim } = planRows[0]
+  const trialExpirado = trial_fim && new Date(trial_fim) < new Date()
+  if (plano === 'bloqueado' || (plano !== 'pro' && trialExpirado)) {
+    return NextResponse.json(
+      { error: 'Recurso disponível no plano Pro. Acesse /planos para assinar.' },
+      { status: 402 }
+    )
+  }
 
   // Verifica que a sessão pertence ao psicólogo autenticado
-  const { rows: sessaoRows } = await (await import('@/lib/db')).default.query(
+  const { rows: sessaoRows } = await db.query(
     'SELECT id FROM sessoes WHERE id = $1 AND psicologo_id = $2',
     [sessaoId, session.user.id]
   )
@@ -71,7 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-haiku-4-5',
       max_tokens: 1200,
       messages: [{
         role: 'user',
@@ -90,7 +106,7 @@ Formato obrigatório:
   })
 
   if (!claudeRes.ok) {
-    await (await import('@/lib/db')).default.query(
+    await db.query(
       'UPDATE sessoes SET notas_clinicas = $1 WHERE id = $2 AND psicologo_id = $3',
       [transcricao, sessaoId, session.user.id]
     )
@@ -100,7 +116,7 @@ Formato obrigatório:
   const claudeData = await claudeRes.json()
   const prontuario = claudeData.content?.[0]?.text ?? transcricao
 
-  await (await import('@/lib/db')).default.query(
+  await db.query(
     'UPDATE sessoes SET notas_clinicas = $1 WHERE id = $2 AND psicologo_id = $3',
     [prontuario, sessaoId, session.user.id]
   )

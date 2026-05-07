@@ -27,14 +27,24 @@ export async function GET(req: NextRequest) {
     const payment = await asaasGetPayment(paymentId)
     if (!payment) return NextResponse.json({ status: 'pending' })
 
+    // Segurança: verifica que o pagamento pertence a este usuário (IDOR prevention)
+    if (payment.externalReference !== session.user.id) {
+      console.warn('[pagamento/status] externalReference mismatch — possível IDOR attempt', {
+        userId: session.user.id,
+        externalReference: payment.externalReference,
+        paymentId,
+      })
+      return NextResponse.json({ status: 'pending' })
+    }
+
     if (['RECEIVED', 'CONFIRMED'].includes(payment.status)) {
-      // Ativa o plano
+      // Ativa o plano — idempotente: só atualiza se ainda não for pro
       await pool.query(
         `UPDATE psicologos
          SET plano = 'pro',
              trial_fim = NOW() + INTERVAL '35 days',
              mp_subscription_id = $1
-         WHERE id = $2`,
+         WHERE id = $2 AND (plano != 'pro' OR mp_subscription_id IS DISTINCT FROM $1)`,
         [paymentId, session.user.id],
       )
       return NextResponse.json({ status: 'active' })

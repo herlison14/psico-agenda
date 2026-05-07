@@ -42,19 +42,26 @@ export async function POST(req: NextRequest) {
 
   try {
     // extRef = psicologo_id (UUID)
-    const { rows } = await pool.query('SELECT id, plano FROM psicologos WHERE id = $1', [extRef])
+    const { rows } = await pool.query('SELECT id, plano, mp_subscription_id FROM psicologos WHERE id = $1', [extRef])
     if (!rows.length) return NextResponse.json({ ok: true })
 
-    if (rows[0].plano !== 'pro') {
-      await pool.query(
-        `UPDATE psicologos
-         SET plano = 'pro',
-             trial_fim = NOW() + INTERVAL '35 days',
-             mp_subscription_id = $1
-         WHERE id = $2`,
-        [payId, extRef],
-      )
-      console.log('[webhook/asaas] plano pro ativado para', extRef)
+    // Idempotência: skip se já processamos este payId específico
+    if (rows[0].mp_subscription_id === payId) {
+      console.log('[webhook/asaas] payId=%s já processado (idempotente), skip', payId)
+      return NextResponse.json({ ok: true })
+    }
+
+    // Ativa pro se ainda não é pro — UPDATE atômico previne race condition
+    const { rowCount } = await pool.query(
+      `UPDATE psicologos
+       SET plano = 'pro',
+           trial_fim = NOW() + INTERVAL '35 days',
+           mp_subscription_id = $1
+       WHERE id = $2 AND mp_subscription_id IS DISTINCT FROM $1`,
+      [payId, extRef],
+    )
+    if ((rowCount ?? 0) > 0) {
+      console.log('[webhook/asaas] plano pro ativado para', extRef, 'pay', payId)
     }
   } catch (err) {
     console.error('[webhook/asaas]', err)

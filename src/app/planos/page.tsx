@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useCallback } from 'react'
+import { useState, Suspense, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Brain, CheckCircle, ArrowLeft, Loader2, Copy, Check, QrCode, RefreshCw } from 'lucide-react'
@@ -9,11 +9,11 @@ const RECURSOS = [
   'Agenda semanal ilimitada',
   'Cadastro de pacientes ilimitado',
   'Geração de recibos em PDF',
-  'Relatório financeiro mensal',
-  'Exportação Carnê-Leão (IR)',
-  'Agente July via WhatsApp',
+  'Relatório financeiro mensal com exportação CSV',
+  'Agendamento automático via JULY (IA)',
   'Prontuário SOAP gerado por IA',
   'Transcrição de áudio de consultas',
+  'Link de agendamento público',
   'Suporte por e-mail',
 ]
 
@@ -58,11 +58,11 @@ function ModalPix({ pix, onClose, onConfirmed }: {
     }
   }, [pix.payment_id, polling, onConfirmed])
 
-  // Polling automático a cada 5s
-  useState(() => {
+  // Polling automático a cada 5s — useEffect garante cleanup quando modal fecha
+  useEffect(() => {
     const id = setInterval(verificar, 5000)
     return () => clearInterval(id)
-  })
+  }, [verificar])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

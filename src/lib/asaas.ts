@@ -1,6 +1,15 @@
 const ASAAS_API_KEY  = process.env.ASAAS_API_KEY  ?? ''
 // Sandbox: https://sandbox.asaas.com/api/v3 | Produção: https://api.asaas.com/v3
-const ASAAS_API_BASE = process.env.ASAAS_API_BASE ?? 'https://sandbox.asaas.com/api/v3'
+// NUNCA usa sandbox como fallback — obriga configuração explícita da variável de ambiente
+const ASAAS_API_BASE = (() => {
+  const base = process.env.ASAAS_API_BASE
+  if (!base) {
+    // Em desenvolvimento, usa sandbox apenas se explicitamente configurado
+    if (process.env.NODE_ENV !== 'production') return 'https://sandbox.asaas.com/api/v3'
+    throw new Error('[asaas] ASAAS_API_BASE não configurada. Configure a variável de ambiente para produção.')
+  }
+  return base
+})()
 
 function headers() {
   return { 'access_token': ASAAS_API_KEY, 'Content-Type': 'application/json' }
