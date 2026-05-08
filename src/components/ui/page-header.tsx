@@ -15,7 +15,7 @@ export function PageHeader({ title, subtitle, icon: Icon, children, className }:
       <div className="flex items-center gap-3">
         {Icon && (
           <div className="page-header-icon">
-            <Icon className="w-5 h-5 text-[--color-navy]" strokeWidth={1.75} />
+            <Icon className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
         )}
         <div>

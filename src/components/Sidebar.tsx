@@ -83,7 +83,7 @@ export default function Sidebar() {
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-7 border-b border-white/10 shrink-0">
-        <div className="bg-[#3b82f6] rounded-xl p-2 shadow-inner">
+        <div className="relative bg-gradient-to-br from-[#3b82f6] to-[#6366f1] rounded-xl p-2 shadow-[0_0_0_3px_rgba(99,102,241,0.35),0_4px_12px_rgba(0,0,0,0.25)]">
           <Brain className="w-5 h-5 text-white" strokeWidth={1.5} />
         </div>
         <div>
@@ -101,9 +101,9 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 active
-                  ? 'bg-[#3b82f6] text-white shadow-sm'
+                  ? 'bg-white/15 backdrop-blur-sm border border-white/20 text-white shadow-[0_4px_20px_rgba(0,0,0,0.2)]'
                   : 'text-[#93c5fd] hover:bg-white/10 hover:text-white'
               }`}
             >
@@ -166,9 +166,9 @@ export default function Sidebar() {
       {/* Badge Pro */}
       {plano === 'pro' && (
         <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10">
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-400/30">
             <Zap className="w-4 h-4 text-[#fbbf24] shrink-0" strokeWidth={2} />
-            <span className="text-sm font-medium text-[#fbbf24]">Plano Pro ativo</span>
+            <span className="text-sm font-semibold text-[#fde68a]">Plano Pro ativo</span>
           </div>
         </div>
       )}
@@ -191,7 +191,8 @@ export default function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-40 lg:hidden bg-[#1e3a8a] text-[#93c5fd] p-2.5 rounded-xl shadow-md"
+        className="fixed top-4 left-4 z-40 lg:hidden text-white p-2.5 rounded-xl shadow-md"
+        style={{ background: 'var(--grad-sidebar)' }}
         aria-label="Abrir menu"
       >
         <Menu className="w-5 h-5" />
@@ -200,17 +201,21 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* Mobile drawer */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-[#1e3a8a] z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 left-0 h-full w-64 z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ background: 'var(--grad-sidebar)' }}
       >
+        {/* Orb decorativo */}
+        <div className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }} />
         <button
           onClick={() => setOpen(false)}
           className="absolute top-4 right-4 text-[#93c5fd] hover:text-white transition-colors"
@@ -222,7 +227,15 @@ export default function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-[#1e3a8a] shrink-0 h-screen sticky top-0">
+      <aside
+        className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 overflow-hidden"
+        style={{ background: 'var(--grad-sidebar)' }}
+      >
+        {/* Orb decorativo */}
+        <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }} />
+        <div className="pointer-events-none absolute bottom-10 -left-16 w-48 h-48 rounded-full opacity-10"
+          style={{ background: 'radial-gradient(circle, #3b82f6, transparent 70%)' }} />
         <NavContent />
       </aside>
     </>

@@ -147,36 +147,12 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <StatCard label="Sessões hoje"    value={sessoesHoje.length}  icon={CalendarDays} />
-        <StatCard
-          label="Receita do mês"
-          value={fmt(receitaMes)}
-          icon={DollarSign}
-          iconBg="bg-[--color-success-bg]"
-          iconColor="text-[--color-success]"
-        />
-        <StatCard
-          label="A receber"
-          value={fmt(pendentesMes.valor)}
-          icon={Banknote}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-600"
-        />
-        <StatCard
-          label="Recibos emitidos"
-          value={recibosCount}
-          icon={FileText}
-          iconBg="bg-[--color-amber-bg]"
-          iconColor="text-[--color-amber]"
-        />
-        <StatCard label="Pacientes ativos" value={pacientesAtivos} icon={Users} />
-        <StatCard
-          label="Faltas no mês"
-          value={faltasMes}
-          icon={UserX}
-          iconBg="bg-orange-50"
-          iconColor="text-orange-500"
-        />
+        <StatCard label="Sessões hoje"    value={sessoesHoje.length}  icon={CalendarDays}  variant="royal" />
+        <StatCard label="Receita do mês"  value={fmt(receitaMes)}     icon={DollarSign}    variant="emerald" />
+        <StatCard label="A receber"       value={fmt(pendentesMes.valor)} icon={Banknote}  variant="amber" />
+        <StatCard label="Recibos emitidos" value={recibosCount}       icon={FileText}      variant="teal" />
+        <StatCard label="Pacientes ativos" value={pacientesAtivos}    icon={Users}         variant="indigo" />
+        <StatCard label="Faltas no mês"   value={faltasMes}           icon={UserX}         variant="violet" />
       </div>
 
       {/* Link de agendamento */}
