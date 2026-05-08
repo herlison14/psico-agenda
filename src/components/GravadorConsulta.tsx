@@ -6,6 +6,9 @@ import {
   CheckCircle2, AlertCircle, RotateCcw,
 } from 'lucide-react'
 
+// Alturas fixas para a waveform — evita re-render instável com Math.random()
+const WAVE_HEIGHTS = [10, 16, 8, 20, 14, 18, 6, 12]
+
 type Estado = 'idle' | 'gravando' | 'pausado' | 'processando' | 'concluido' | 'erro'
 
 interface Props {
@@ -167,15 +170,15 @@ export default function GravadorConsulta({ sessaoId, onTranscrito }: Props) {
             </span>
           </div>
 
-          {/* Barra de progresso simulada (pulsa durante gravação) */}
+          {/* Waveform simulada (pulsa durante gravação) */}
           {gravando && (
             <div className="flex items-center gap-0.5 h-5">
-              {[...Array(8)].map((_, i) => (
+              {WAVE_HEIGHTS.map((h, i) => (
                 <span
                   key={i}
                   className="w-1 rounded-full bg-red-400 animate-pulse"
                   style={{
-                    height: `${Math.random() * 12 + 6}px`,
+                    height: `${h}px`,
                     animationDelay: `${i * 80}ms`,
                   }}
                 />

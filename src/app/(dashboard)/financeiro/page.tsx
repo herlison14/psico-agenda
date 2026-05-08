@@ -129,11 +129,11 @@ export default function FinanceiroPage() {
 
   /* Export CSV */
   function exportarCSV() {
-    const cab  = 'Data,Paciente,CPF,Status,Pagamento,Valor'
+    const cab  = 'Data,Paciente,Status,Pagamento,Valor'
     const rows = sessoes.map(s => [
       fmtDt(s.data_hora),
       `"${s.paciente?.nome ?? ''}"`,
-      s.paciente?.cpf ?? '',
+      // CPF omitido da exportação por exigência da LGPD (dado sensível)
       s.status,
       s.pagamento_status ?? 'pendente',
       Number(s.valor).toFixed(2).replace('.', ','),

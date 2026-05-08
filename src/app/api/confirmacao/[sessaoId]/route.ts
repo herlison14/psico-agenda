@@ -30,9 +30,7 @@ export async function GET(
          s.id, s.data_hora, s.duracao_min, s.valor,
          pac.nome        AS paciente_nome,
          psi.nome        AS psicologo_nome,
-         psi.crp         AS psicologo_crp,
-         psi.email       AS psicologo_email,
-         psi.telefone    AS psicologo_telefone
+         psi.crp         AS psicologo_crp
        FROM sessoes s
        JOIN pacientes  pac ON pac.id = s.paciente_id
        JOIN psicologos psi ON psi.id = s.psicologo_id
@@ -169,13 +167,11 @@ export async function GET(
          `PsiPlanner · psiplanner.com.br · Documento gerado em ${emitidoEm}`,
          50, footerY + 10, { align: 'center', width: doc.page.width - 100 },
        )
-    if (s.psicologo_email || s.psicologo_telefone) {
-      doc.fillColor(SLATE).font('Helvetica').fontSize(8)
-         .text(
-           [s.psicologo_email, s.psicologo_telefone].filter(Boolean).join('   ·   '),
-           50, footerY + 22, { align: 'center', width: doc.page.width - 100 },
-         )
-    }
+    doc.fillColor(SLATE).font('Helvetica').fontSize(8)
+       .text(
+         'Agendado via PsiPlanner — psiplanner.com.br',
+         50, footerY + 22, { align: 'center', width: doc.page.width - 100 },
+       )
 
     doc.end()
     console.log('[confirmacao/pdf] PDF gerado sessaoId=%s', sessaoId)

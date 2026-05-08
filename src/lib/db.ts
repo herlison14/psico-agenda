@@ -19,8 +19,8 @@ const pool = new Pool({
   connectionString: url || undefined,
   ssl: sslConfig,
   max: 10,
-  min: 2,
-  idleTimeoutMillis: 30000,
+  min: 0,                      // 0 = sem conexões mínimas — ideal para serverless (evita cold start)
+  idleTimeoutMillis: 10000,    // fecha conexões ociosas rapidamente em serverless
   connectionTimeoutMillis: 5000,
   statement_timeout: 10000,
 })

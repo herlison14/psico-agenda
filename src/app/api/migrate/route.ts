@@ -4,6 +4,14 @@ import { join } from 'path'
 import pool from '@/lib/db'
 
 export async function POST(req: NextRequest) {
+  // Endpoint de migração bloqueado em produção — use migrações lazy (ensure-schema.ts)
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Migrate endpoint disabled in production. Use lazy migrations.' },
+      { status: 403 },
+    )
+  }
+
   const key = req.headers.get('x-admin-key')
   if (!key || key !== process.env.ADMIN_KEY)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

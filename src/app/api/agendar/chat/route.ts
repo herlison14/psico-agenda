@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateText, tool, stepCountIs } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
 import { z } from 'zod'
 import pool from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   // 20 mensagens por IP a cada 15 minutos
   const ip = getClientIp(req)
-  if (!checkRateLimit(`chat:${ip}`, 20)) {
+  if (!await checkRateLimit(`chat:${ip}`, 20)) {
     return NextResponse.json({ error: 'Muitas mensagens. Aguarde alguns minutos.' }, { status: 429 })
   }
 
@@ -135,13 +134,19 @@ Data/hora atual: ${agora}`
 
   try {
     const { text } = await generateText({
-      model: anthropic('claude-haiku-4-5'),
+      model: 'anthropic/claude-haiku-4.5',
       system: systemPrompt,
       messages: [
         ...history.slice(-10).map((m) => ({ role: m.role, content: m.content })),
         { role: 'user' as const, content: message.slice(0, 500) },
       ],
       stopWhen: stepCountIs(6),
+      providerOptions: {
+        gateway: {
+          user: `psi-${psicologo_id}`,
+          tags: ['feature:july-agent', 'env:production'],
+        },
+      },
       tools: {
         verificar_horarios: tool({
           description: 'Verifica os horários disponíveis para agendamento nos próximos dias (segunda a sexta). Retorna lista de slots — use o campo horario_token EXATO em agendar_sessao, sem modificações.',
@@ -218,7 +223,7 @@ Data/hora atual: ${agora}`
             const dt = new Date(horario_token)
             if (isNaN(dt.getTime())) return { erro: 'horario_token inválido.' }
 
-            // Valida hora BRT: extrai da string (posição 11-13)
+            // Valida hora BRT: extrai hh e mm do token ISO com offset
             const horaBRTStr = horario_token.slice(11, 13)
             const horaBRT = parseInt(horaBRTStr, 10)
             const minBRT  = parseInt(horario_token.slice(14, 16), 10)

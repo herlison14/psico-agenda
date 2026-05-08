@@ -1,32 +1,67 @@
-import { NextRequest } from 'next/server'
+/**
+ * Rate limiting via PostgreSQL — funciona em ambientes serverless multi-instância.
+ * Substitui a versão in-memory que não funcionava no Vercel Fluid Compute.
+ *
+ * Usa upsert atômico com janela de 15 minutos:
+ *   - Se o registro não existe → cria com count=1
+ *   - Se a janela ainda é a atual → incrementa count
+ *   - Se a janela mudou → reseta para count=1
+ */
+import pool from '@/lib/db'
+import type { NextRequest } from 'next/server'
 
-const WINDOW_MS = 15 * 60 * 1000 // 15 minutos
-const store = new Map<string, { count: number; resetAt: number }>()
+const WINDOW_MIN = 15
 
-// Limpeza periódica para evitar memory leak
-setInterval(() => {
+/** Retorna o timestamp do início da janela de 15 minutos atual */
+function currentWindow(): Date {
   const now = Date.now()
-  for (const [key, val] of store.entries()) {
-    if (now > val.resetAt) store.delete(key)
-  }
-}, 5 * 60 * 1000)
-
-export function checkRateLimit(key: string, max: number): boolean {
-  const now = Date.now()
-  const entry = store.get(key)
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + WINDOW_MS })
-    return true
-  }
-  if (entry.count >= max) return false
-  entry.count++
-  return true
+  const windowMs = WINDOW_MIN * 60 * 1000
+  return new Date(Math.floor(now / windowMs) * windowMs)
 }
 
+/**
+ * Verifica e incrementa o contador de rate limit para a chave dada.
+ * @returns true se a requisição está dentro do limite, false se excedeu
+ */
+export async function checkRateLimit(key: string, max: number): Promise<boolean> {
+  const windowStart = currentWindow()
+  try {
+    // Garante que a tabela existe (lazy migration)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rate_limits (
+        key          TEXT        NOT NULL,
+        window_start TIMESTAMPTZ NOT NULL,
+        count        INT         NOT NULL DEFAULT 1,
+        PRIMARY KEY (key)
+      )
+    `)
+
+    const { rows } = await pool.query<{ count: number }>(`
+      INSERT INTO rate_limits (key, window_start, count)
+      VALUES ($1, $2, 1)
+      ON CONFLICT (key) DO UPDATE
+        SET
+          count        = CASE
+                           WHEN rate_limits.window_start = $2 THEN rate_limits.count + 1
+                           ELSE 1
+                         END,
+          window_start = $2
+      RETURNING count
+    `, [key, windowStart.toISOString()])
+
+    return rows[0].count <= max
+  } catch (err) {
+    // Fail open: prefere deixar passar a bloquear por erro de DB
+    console.error('[rateLimit] DB error, allowing request:', err)
+    return true
+  }
+}
+
+/** Extrai o IP real do cliente respeitando proxies (Vercel, Cloudflare, etc.) */
 export function getClientIp(req: NextRequest): string {
   return (
-    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-    req.headers.get('x-real-ip') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+    req.headers.get('x-real-ip') ??
     'unknown'
   )
 }
