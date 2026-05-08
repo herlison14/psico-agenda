@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { Psicologo } from '@/types/psico'
-import { Loader2, Save, UserCircle, CheckCircle2, Globe } from 'lucide-react'
+import { Loader2, Save, UserCircle, CheckCircle2, Globe, CreditCard, ShieldAlert, AlertTriangle } from 'lucide-react'
 
 const IconInstagram = () => (
   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="#e1306c">
@@ -45,6 +45,16 @@ export default function PerfilPage() {
   const [sucesso, setSucesso] = useState(false)
   const [erro, setErro] = useState('')
 
+  // Assinatura
+  const [cancelando, setCancelando] = useState(false)
+  const [cancelSucesso, setCancelSucesso] = useState(false)
+  const [cancelErro, setCancelErro] = useState('')
+
+  // Exclusão de conta
+  const [confirmDelete, setConfirmDelete] = useState('')
+  const [deletando, setDeletando] = useState(false)
+  const [deleteErro, setDeleteErro] = useState('')
+
   useEffect(() => {
     let cancelled = false
     fetch('/api/psicologos')
@@ -66,6 +76,46 @@ export default function PerfilPage() {
 
   function handleMasked(field: keyof Psicologo, value: string, mask: (v: string) => string) {
     setForm(f => ({ ...f, [field]: mask(value) }))
+  }
+
+  async function handleCancelar() {
+    if (!confirm('Tem certeza que deseja cancelar a assinatura Pro? Seu acesso continua até o fim do período pago.')) return
+    setCancelando(true)
+    setCancelErro('')
+    setCancelSucesso(false)
+    try {
+      const res = await fetch('/api/pagamento/cancelar', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) { setCancelErro(data.error ?? 'Erro ao cancelar.'); return }
+      setCancelSucesso(true)
+      setForm(f => ({ ...f, plano: 'trial' }))
+    } catch {
+      setCancelErro('Falha de rede. Tente novamente.')
+    } finally {
+      setCancelando(false)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (confirmDelete !== 'EXCLUIR') {
+      setDeleteErro('Digite EXCLUIR para confirmar.')
+      return
+    }
+    setDeletando(true)
+    setDeleteErro('')
+    try {
+      const res = await fetch('/api/account', { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        setDeleteErro(data.error ?? 'Erro ao excluir conta.')
+        return
+      }
+      await signOut({ callbackUrl: '/login' })
+    } catch {
+      setDeleteErro('Falha de rede. Tente novamente.')
+    } finally {
+      setDeletando(false)
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -294,6 +344,108 @@ export default function PerfilPage() {
           </button>
         </div>
       </form>
+
+      {/* ── Minha Assinatura ── */}
+      <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm mt-5">
+        <div className="flex items-center gap-2 mb-4">
+          <CreditCard className="w-4 h-4 text-[#2563eb]" strokeWidth={1.75} />
+          <h2 className="text-sm font-semibold text-[#0f172a] uppercase tracking-wide">Minha Assinatura</h2>
+        </div>
+
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                (form as { plano?: string }).plano === 'pro'
+                  ? 'bg-[#eff6ff] text-[#1d4ed8]'
+                  : 'bg-amber-50 text-amber-700'
+              }`}>
+                {(form as { plano?: string }).plano === 'pro' ? 'Pro ativo' : 'Trial / Gratuito'}
+              </span>
+            </div>
+            {(form as { trial_fim?: string }).trial_fim && (
+              <p className="text-xs text-[#64748b] mt-1.5">
+                {(form as { plano?: string }).plano === 'pro' ? 'Acesso Pro até' : 'Trial expira em'}{' '}
+                {new Date((form as { trial_fim: string }).trial_fim).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+          </div>
+
+          {(form as { plano?: string }).plano === 'pro' && !cancelSucesso && (
+            <button
+              type="button"
+              onClick={handleCancelar}
+              disabled={cancelando}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm border border-[#e2e8f0] text-[#334155] hover:bg-[#f1f5f9] rounded-xl transition-colors disabled:opacity-60"
+            >
+              {cancelando && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Cancelar assinatura
+            </button>
+          )}
+
+          {(form as { plano?: string }).plano !== 'pro' && (
+            <a
+              href="/planos"
+              className="flex items-center gap-2 bg-[#1e3a8a] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] transition-colors"
+            >
+              Assinar Pro — R$ 50/mês
+            </a>
+          )}
+        </div>
+
+        {cancelSucesso && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-xl">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            Assinatura cancelada. Seu acesso continua até o fim do período pago.
+          </div>
+        )}
+        {cancelErro && (
+          <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-2.5 rounded-xl">{cancelErro}</p>
+        )}
+      </div>
+
+      {/* ── Zona de Perigo ── */}
+      <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm mt-5">
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldAlert className="w-4 h-4 text-red-500" strokeWidth={1.75} />
+          <h2 className="text-sm font-semibold text-red-700 uppercase tracking-wide">Zona de Perigo</h2>
+        </div>
+        <p className="text-sm text-[#64748b] mb-5">
+          A exclusão remove permanentemente sua conta, todos os pacientes, sessões e dados financeiros.
+          Esta ação não pode ser desfeita.
+        </p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-[#334155] mb-1.5">
+              Digite <strong>EXCLUIR</strong> para confirmar
+            </label>
+            <input
+              type="text"
+              value={confirmDelete}
+              onChange={e => setConfirmDelete(e.target.value)}
+              placeholder="EXCLUIR"
+              className="w-full sm:w-64 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition-all"
+            />
+          </div>
+
+          {deleteErro && (
+            <p className="text-sm text-red-600">{deleteErro}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={deletando || confirmDelete !== 'EXCLUIR'}
+            className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {deletando
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <AlertTriangle className="w-4 h-4" strokeWidth={2} />}
+            Excluir minha conta permanentemente
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

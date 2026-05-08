@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Paciente } from '@/types/psico'
-import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus, BookOpen, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus, BookOpen, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const PAGE_SIZE = 15
 
 function maskCPF(v: string) {
   return v.replace(/\D/g, '').slice(0, 11)
@@ -35,6 +37,7 @@ export default function PacientesPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [erro, setErro] = useState('')
+  const [pagina, setPagina] = useState(1)
 
   async function loadPacientes() {
     setLoading(true)
@@ -127,6 +130,10 @@ export default function PacientesPage() {
     (p.email ?? '').toLowerCase().includes(busca.toLowerCase())
   )
 
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE))
+  const paginaAtual  = Math.min(pagina, totalPaginas)
+  const paginados    = filtrados.slice((paginaAtual - 1) * PAGE_SIZE, paginaAtual * PAGE_SIZE)
+
   const inputClass = "w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none transition-all"
   const labelClass = "block text-sm font-medium text-[#334155] mb-1.5"
 
@@ -157,7 +164,7 @@ export default function PacientesPage() {
         <input
           type="text"
           value={busca}
-          onChange={e => setBusca(e.target.value)}
+          onChange={e => { setBusca(e.target.value); setPagina(1) }}
           placeholder="Buscar por nome ou e-mail..."
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none transition-all"
         />
@@ -187,7 +194,7 @@ export default function PacientesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
-                {filtrados.map(p => (
+                {paginados.map(p => (
                   <tr key={p.id} className="hover:bg-[#FAFAF8] transition-colors">
                     <td className="px-5 py-4 font-medium text-[#0f172a]">{p.nome}</td>
                     <td className="px-5 py-4 text-[#64748b] hidden sm:table-cell">{p.telefone || '—'}</td>
@@ -231,6 +238,56 @@ export default function PacientesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Paginação */}
+        {!loading && totalPaginas > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-[#f1f5f9]">
+            <p className="text-xs text-[#64748b]">
+              {filtrados.length} pacientes · página {paginaAtual} de {totalPaginas}
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPagina(p => Math.max(1, p - 1))}
+                disabled={paginaAtual === 1}
+                className="p-1.5 rounded-lg text-[#64748b] hover:bg-[#eff6ff] hover:text-[#2563eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+              </button>
+              {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+                .filter(n => n === 1 || n === totalPaginas || Math.abs(n - paginaAtual) <= 1)
+                .reduce<(number | '...')[]>((acc, n, i, arr) => {
+                  if (i > 0 && n - (arr[i - 1] as number) > 1) acc.push('...')
+                  acc.push(n)
+                  return acc
+                }, [])
+                .map((item, i) =>
+                  item === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-1 text-xs text-[#94a3b8]">…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setPagina(item as number)}
+                      className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
+                        paginaAtual === item
+                          ? 'bg-[#1e3a8a] text-white'
+                          : 'text-[#334155] hover:bg-[#eff6ff] hover:text-[#2563eb]'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )
+              }
+              <button
+                onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+                disabled={paginaAtual === totalPaginas}
+                className="p-1.5 rounded-lg text-[#64748b] hover:bg-[#eff6ff] hover:text-[#2563eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" strokeWidth={2} />
+              </button>
+            </div>
           </div>
         )}
       </div>

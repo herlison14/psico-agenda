@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [crp, setCrp] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [aceitouTermos, setAceitouTermos] = useState(false)
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -19,6 +20,10 @@ export default function RegisterPage() {
 
     if (senha.length < 8) {
       setErro('A senha deve ter no mínimo 8 caracteres.')
+      return
+    }
+    if (!aceitouTermos) {
+      setErro('Você precisa aceitar os Termos de Uso e a Política de Privacidade.')
       return
     }
 
@@ -166,6 +171,27 @@ export default function RegisterPage() {
                 minLength={8}
                 className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] outline-none text-sm text-[#0f172a] placeholder:text-[#94a3b8] transition-all"
               />
+            </div>
+
+            <div className="flex items-start gap-3 pt-1">
+              <input
+                id="termos"
+                type="checkbox"
+                checked={aceitouTermos}
+                onChange={e => setAceitouTermos(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-[#e2e8f0] text-[#2563eb] focus:ring-[#2563eb] cursor-pointer shrink-0"
+              />
+              <label htmlFor="termos" className="text-xs text-[#64748b] leading-relaxed cursor-pointer">
+                Ao criar a conta, você concorda com os{' '}
+                <Link href="/termos" target="_blank" className="text-[#2563eb] hover:underline font-medium">
+                  Termos de Uso
+                </Link>{' '}
+                e a{' '}
+                <Link href="/privacidade" target="_blank" className="text-[#2563eb] hover:underline font-medium">
+                  Política de Privacidade
+                </Link>
+                , incluindo o tratamento de dados pessoais conforme a LGPD.
+              </label>
             </div>
 
             {erro && (

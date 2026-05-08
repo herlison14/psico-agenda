@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
 import pool from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   // 5 tentativas por IP a cada 15 minutos
@@ -44,6 +45,11 @@ export async function POST(req: NextRequest) {
       `INSERT INTO psicologos (email, password_hash, nome, crp, plano, trial_fim)
        VALUES ($1, $2, $3, $4, 'trial', NOW() + INTERVAL '7 days')`,
       [email, password_hash, nome ?? null, crp ?? null]
+    )
+
+    // Dispara e-mail de boas-vindas de forma não-bloqueante
+    sendWelcomeEmail(email, nome ?? '').catch(err =>
+      console.error('[register] falha ao enviar welcome email:', err)
     )
 
     return NextResponse.json({ ok: true }, { status: 201 })

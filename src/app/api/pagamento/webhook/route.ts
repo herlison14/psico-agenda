@@ -51,11 +51,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // Ativa pro se ainda não é pro — UPDATE atômico previne race condition
+    // Ativa pro — renovação cumulativa: soma 30 dias ao maior entre trial_fim e agora
     const { rowCount } = await pool.query(
       `UPDATE psicologos
        SET plano = 'pro',
-           trial_fim = NOW() + INTERVAL '35 days',
+           trial_fim = GREATEST(trial_fim, NOW()) + INTERVAL '30 days',
            mp_subscription_id = $1
        WHERE id = $2 AND mp_subscription_id IS DISTINCT FROM $1`,
       [payId, extRef],

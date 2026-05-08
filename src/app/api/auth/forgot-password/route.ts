@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req)
-  if (!checkRateLimit(`forgot:${ip}`, 3)) {
+  if (!await checkRateLimit(`forgot:${ip}`, 3)) {
     return NextResponse.json({ ok: true }) // Resposta genérica para não vazar info
   }
 

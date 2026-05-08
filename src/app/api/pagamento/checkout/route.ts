@@ -32,12 +32,6 @@ export async function POST() {
       customerCpf:       prof.cpf   ?? '',
     })
 
-    // Persiste o payment_id para polling
-    await pool.query(
-      'UPDATE psicologos SET mp_subscription_id = $1 WHERE id = $2',
-      [pix.paymentId, session.user.id],
-    )
-
     return NextResponse.json({
       payment_id:     pix.paymentId,
       qr_code:        pix.qrCode,
