@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "api-security-hardening": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/api-security-hardening/skills/api-security-hardening/SKILL.md",
+      "computedHash": "413172ad8d28e96ed7684fbec5b78a09251f0a2014003cfd87e0ec7e3e4c90bc"
+    },
+    "backend-code-review": {
+      "source": "langgenius/dify",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/backend-code-review/SKILL.md",
+      "computedHash": "83eeea10d27e504e0129a55f8d3f36170df35c99803a80478bd79ae753364a56"
+    },
+    "backend-security-coder": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/backend-security-coder/SKILL.md",
+      "computedHash": "1a3f0f299003a7ddda5ca19ac081baee21a2794469f8bf045a241b9786088b90"
+    },
     "caveman": {
       "source": "mattpocock/skills",
       "sourceType": "github",
