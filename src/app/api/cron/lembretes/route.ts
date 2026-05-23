@@ -1,11 +1,13 @@
 /**
  * GET /api/cron/lembretes
  * Vercel Cron Job — roda diariamente às 8h BRT (11h UTC)
- * Envia lembretes via WhatsApp (Z-API) para sessões do dia seguinte.
+ * Envia lembretes via WhatsApp (WPPConnect Server) para sessões do dia seguinte.
  *
  * Variáveis de ambiente necessárias (opcionais — sem elas, o cron é no-op):
- *   ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_CLIENT_TOKEN
- *   CRON_SECRET — segredo compartilhado para autenticar a chamada do Vercel
+ *   WPPCONNECT_URL     — URL pública do seu servidor WPPConnect (ex: https://wpp.railway.app)
+ *   WPPCONNECT_SESSION — nome da sessão (ex: psiplanner)
+ *   WPPCONNECT_TOKEN   — Bearer token gerado no WPPConnect
+ *   CRON_SECRET        — segredo para autenticar a chamada do Vercel Cron
  */
 import { NextRequest, NextResponse } from 'next/server'
 import pool from '@/lib/db'
@@ -14,28 +16,33 @@ import { ensureSessoesSchema } from '@/lib/ensure-schema'
 const CRON_SECRET = process.env.CRON_SECRET
 
 async function sendWhatsApp(phone: string, message: string): Promise<boolean> {
-  const instanceId  = process.env.ZAPI_INSTANCE_ID
-  const token       = process.env.ZAPI_TOKEN
-  const clientToken = process.env.ZAPI_CLIENT_TOKEN
+  const baseUrl = process.env.WPPCONNECT_URL?.replace(/\/$/, '')
+  const session = process.env.WPPCONNECT_SESSION ?? 'psiplanner'
+  const token   = process.env.WPPCONNECT_TOKEN
 
-  if (!instanceId || !token) return false
+  if (!baseUrl || !token) return false
 
+  // WPPConnect espera número internacional sem '+' ou '@c.us' (ex: 5521999999999)
   const phoneNorm = phone.replace(/\D/g, '')
-  // Z-API espera número no formato internacional sem '+' (ex: 5521999999999)
   const phoneIntl = phoneNorm.startsWith('55') ? phoneNorm : `55${phoneNorm}`
 
   try {
-    const res = await fetch(
-      `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(clientToken ? { 'Client-Token': clientToken } : {}),
-        },
-        body: JSON.stringify({ phone: phoneIntl, message }),
+    const res = await fetch(`${baseUrl}/api/${session}/send-message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
-    )
+      body: JSON.stringify({
+        phone: phoneIntl,
+        message,
+        isGroup: false,
+      }),
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      console.warn(`[lembretes] WPPConnect ${res.status}:`, body)
+    }
     return res.ok
   } catch (err) {
     console.error('[lembretes] WhatsApp send error:', err)
@@ -50,9 +57,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Z-API não configurado — cron é no-op (não falha)
-  if (!process.env.ZAPI_INSTANCE_ID || !process.env.ZAPI_TOKEN) {
-    return NextResponse.json({ skipped: true, reason: 'ZAPI not configured' })
+  // WPPConnect não configurado — cron é no-op (não falha o deploy)
+  if (!process.env.WPPCONNECT_URL || !process.env.WPPCONNECT_TOKEN) {
+    return NextResponse.json({ skipped: true, reason: 'WPPConnect not configured' })
   }
 
   // Sessões agendadas para amanhã (BRT) — janela de 24h a partir de agora + 20h
