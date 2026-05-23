@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import pool from '@/lib/db'
 import Sidebar from '@/components/Sidebar'
+import { PsicologoProvider } from '@/contexts/PsicologoContext'
 
 async function getPlano(userId: string) {
   try {
@@ -27,13 +28,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex h-full">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 lg:p-8 pt-16 lg:pt-8 min-h-full mesh-bg relative">
-          {children}
-        </div>
-      </main>
-    </div>
+    <PsicologoProvider>
+      <div className="flex h-full">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 lg:p-8 pt-16 lg:pt-8 min-h-full mesh-bg relative">
+            {children}
+          </div>
+        </main>
+      </div>
+    </PsicologoProvider>
   )
 }

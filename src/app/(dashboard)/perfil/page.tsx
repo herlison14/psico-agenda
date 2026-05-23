@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { Psicologo } from '@/types/psico'
+import { usePsicologo } from '@/contexts/PsicologoContext'
 import { Loader2, Save, UserCircle, CheckCircle2, Globe, CreditCard, ShieldAlert, AlertTriangle } from 'lucide-react'
 import { maskCPF, maskPhone } from '@/lib/utils'
 
@@ -23,12 +24,11 @@ function maskCRP(v: string) {
 }
 
 export default function PerfilPage() {
-  const { data: session } = useSession()
+  const { psicologo, loading, refresh } = usePsicologo()
   const [form, setForm] = useState<Partial<Psicologo>>({
     nome: '', crp: '', cpf: '', email: '', telefone: '', endereco: '', cidade: '', estado: '',
     instagram: '', linkedin: '', site_url: '',
   })
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [erro, setErro] = useState('')
@@ -43,20 +43,10 @@ export default function PerfilPage() {
   const [deletando, setDeletando] = useState(false)
   const [deleteErro, setDeleteErro] = useState('')
 
+  // Popula o form quando o contexto carrega os dados
   useEffect(() => {
-    let cancelled = false
-    fetch('/api/psicologos')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (cancelled) return
-        if (data && typeof data === 'object' && !('error' in data)) {
-          setForm(data)
-        }
-      })
-      .catch(err => console.error('[GET /api/psicologos]', err))
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [session])
+    if (psicologo) setForm(psicologo)
+  }, [psicologo])
 
   function handleChange(field: keyof Psicologo, value: string) {
     setForm(f => ({ ...f, [field]: value }))
@@ -123,6 +113,7 @@ export default function PerfilPage() {
       setErro('Erro ao salvar: ' + (data.error ?? 'Tente novamente.'))
     } else {
       setSucesso(true)
+      refresh() // atualiza o contexto global para refletir o novo nome/dados
       setTimeout(() => setSucesso(false), 3000)
     }
     setSaving(false)

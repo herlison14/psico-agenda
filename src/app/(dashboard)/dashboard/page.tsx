@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Sessao, Psicologo } from '@/types/psico'
+import { Sessao } from '@/types/psico'
+import { usePsicologo } from '@/contexts/PsicologoContext'
 import { format, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -24,13 +25,13 @@ const STATUS_BADGE: Record<string, { variant: 'blue' | 'green' | 'red' | 'amber'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
+  const { psicologo } = usePsicologo()
   const [sessoesHoje, setSessoesHoje]     = useState<Sessao[]>([])
   const [receitaMes, setReceitaMes]       = useState(0)
   const [recibosCount, setRecibosCount]   = useState(0)
   const [pacientesAtivos, setPacientes]   = useState(0)
   const [faltasMes, setFaltasMes]         = useState(0)
   const [pendentesMes, setPendentesMes]   = useState({ valor: 0, count: 0 })
-  const [psicologo, setPsicologo]         = useState<Psicologo | null>(null)
   const [loading, setLoading]             = useState(true)
   const [erro, setErro]                   = useState<string | null>(null)
   const [copiado, setCopiado]             = useState(false)
@@ -47,9 +48,8 @@ export default function DashboardPage() {
       const mes    = format(now, 'yyyy-MM')
 
       try {
-        const [psicRes, sessoesRes, todasMesRes, recibosRes, pacientesRes] =
+        const [sessoesRes, todasMesRes, recibosRes, pacientesRes] =
           await Promise.all([
-            safeJson<Psicologo>('/api/psicologos'),
             safeJson<Sessao[]>(`/api/sessoes?inicio=${inicio}&fim=${fim}`),
             safeJson<Sessao[]>(`/api/sessoes?mes=${mes}`),
             safeJson<{ created_at: string }[]>('/api/recibos'),
@@ -57,8 +57,6 @@ export default function DashboardPage() {
           ])
 
         if (cancelled) return
-
-        if (psicRes && !('error' in psicRes)) setPsicologo(psicRes as Psicologo)
 
         if (Array.isArray(sessoesRes)) setSessoesHoje(sessoesRes)
 

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Recibo, Psicologo } from '@/types/psico'
+import { Recibo } from '@/types/psico'
+import { usePsicologo } from '@/contexts/PsicologoContext'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { FileText, Download, AlertCircle } from 'lucide-react'
@@ -160,41 +161,24 @@ async function gerarPDF(recibo: Recibo, psicologo: Psicologo) {
 
 export default function RecibosPage() {
   const { data: session } = useSession()
+  const { psicologo, loading: psicLoading } = usePsicologo()
   const [recibos, setRecibos] = useState<Recibo[]>([])
-  const [psicologo, setPsicologo] = useState<Psicologo | null>(null)
   const [loading, setLoading] = useState(true)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
-  const [semPerfil, setSemPerfil] = useState(false)
+  const semPerfil = !psicLoading && !psicologo
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
       try {
-        const [psicRes, recibosRes] = await Promise.all([
-          fetch('/api/psicologos'),
-          fetch('/api/recibos'),
-        ])
-
-        const psicData = psicRes.ok ? await psicRes.json() : null
+        const recibosRes = await fetch('/api/recibos')
         const recibosData = recibosRes.ok ? await recibosRes.json() : []
-
         if (cancelled) return
-
-        // Psicólogo válido só se for objeto sem flag 'error'
-        if (psicData && typeof psicData === 'object' && !('error' in psicData)) {
-          setPsicologo(psicData as Psicologo)
-        } else {
-          setSemPerfil(true)
-        }
-
         setRecibos(Array.isArray(recibosData) ? (recibosData as Recibo[]) : [])
       } catch (err) {
         console.error('[recibos load]', err)
-        if (!cancelled) {
-          setRecibos([])
-          setSemPerfil(true)
-        }
+        if (!cancelled) setRecibos([])
       } finally {
         if (!cancelled) setLoading(false)
       }
