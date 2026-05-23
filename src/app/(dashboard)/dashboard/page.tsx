@@ -13,14 +13,7 @@ import Link from 'next/link'
 import { StatCard } from '@/components/ui/stat-card'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
-
-async function safeJson<T = unknown>(url: string): Promise<T | null> {
-  try {
-    const r = await fetch(url)
-    if (!r.ok) return null
-    return (await r.json()) as T
-  } catch { return null }
-}
+import { safeJson } from '@/lib/utils'
 
 const STATUS_BADGE: Record<string, { variant: 'blue' | 'green' | 'red' | 'amber' | 'neutral'; label: string }> = {
   agendado:  { variant: 'blue',    label: 'Agendado'  },

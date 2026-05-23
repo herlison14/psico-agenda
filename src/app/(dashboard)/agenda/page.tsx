@@ -7,16 +7,18 @@ import {
   format, addDays, startOfWeek, isSameDay, parseISO, setHours, setMinutes
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, X, Loader2, CalendarDays, CheckCircle2, XCircle, UserX, FileEdit, Save, Mic, Banknote, CircleCheck, Gift } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, CalendarDays } from 'lucide-react'
+import { ModalNovaSessao } from './_components/ModalNovaSessao'
+import { ModalDetalheSessao } from './_components/ModalDetalheSessao'
+import { ModalNotas } from './_components/ModalNotas'
 
 const HORAS = Array.from({ length: 16 }, (_, i) => i + 7)
 const STATUS_COLORS: Record<string, string> = {
-  agendado: 'bg-blue-100 border-blue-400 text-blue-800',
+  agendado:  'bg-blue-100 border-blue-400 text-blue-800',
   realizado: 'bg-green-100 border-green-400 text-green-800',
   cancelado: 'bg-red-100 border-red-400 text-red-700 line-through opacity-60',
-  faltou: 'bg-orange-100 border-orange-400 text-orange-700 opacity-70',
+  faltou:    'bg-orange-100 border-orange-400 text-orange-700 opacity-70',
 }
-const STATUS_LABEL: Record<string, string> = { agendado: 'Agendado', realizado: 'Realizado', cancelado: 'Cancelado', faltou: 'Faltou' }
 
 const EMPTY_FORM = {
   paciente_id: '',
@@ -44,12 +46,6 @@ export default function AgendaPage() {
   const [savingNotas, setSavingNotas] = useState(false)
   const [transcrevendo, setTranscrevendo] = useState(false)
   const audioInputRef = useRef<HTMLInputElement>(null)
-
-  const PAGAMENTO_CONFIG = {
-    pendente: { label: 'Pendente', icon: Banknote,    cls: 'bg-amber-50 border-amber-200 text-amber-700' },
-    pago:     { label: 'Pago',     icon: CircleCheck,  cls: 'bg-green-50 border-green-200 text-green-700' },
-    isento:   { label: 'Isento',   icon: Gift,         cls: 'bg-slate-100 border-slate-200 text-slate-500' },
-  } as const
 
   async function alterarPagamento(sessao: Sessao, novo: Sessao['pagamento_status']) {
     await fetch(`/api/sessoes/${sessao.id}`, {
@@ -321,201 +317,42 @@ export default function AgendaPage() {
       </div>
 
       {modalNova && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#f1f5f9] sticky top-0 bg-white">
-              <h2 className="font-semibold text-[#0f172a]">Nova sessão</h2>
-              <button onClick={() => setModalNova(false)} className="text-[#94a3b8] hover:text-[#3b82f6] transition-colors"><X className="w-5 h-5" strokeWidth={1.75} /></button>
-            </div>
-            <form onSubmit={handleSalvar} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#334155] mb-1.5">Paciente *</label>
-                <select
-                  value={form.paciente_id}
-                  onChange={e => {
-                    const p = pacientes.find(p => p.id === e.target.value)
-                    setForm(f => ({ ...f, paciente_id: e.target.value, valor: p?.valor_sessao ?? 150 }))
-                  }}
-                  required
-                  className="w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none"
-                >
-                  <option value="">Selecione um paciente</option>
-                  {pacientes.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#334155] mb-1.5">Data *</label>
-                  <input type="date" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} required className="w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#334155] mb-1.5">Horário *</label>
-                  <input type="time" value={form.hora} onChange={e => setForm(f => ({ ...f, hora: e.target.value }))} required className="w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#334155] mb-1.5">Duração (min)</label>
-                  <input type="number" min="10" value={form.duracao_min} onChange={e => setForm(f => ({ ...f, duracao_min: parseInt(e.target.value) }))} className="w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#334155] mb-1.5">Valor (R$)</label>
-                  <input type="number" step="0.01" min="0" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: parseFloat(e.target.value) }))} className="w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#334155] mb-1.5">Observações</label>
-                <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} rows={3} placeholder="Observações opcionais..." className="w-full px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none resize-none" />
-              </div>
-              {erro && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2.5 rounded-xl text-sm">{erro}</div>}
-              <div className="flex justify-end gap-3 pt-1">
-                <button type="button" onClick={() => setModalNova(false)} className="px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#F5F0EB] rounded-xl transition-colors">Cancelar</button>
-                <button type="submit" disabled={saving} className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] active:scale-[0.98] transition-all disabled:opacity-60">
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Agendar sessão
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ModalNovaSessao
+          pacientes={pacientes}
+          form={form}
+          setForm={setForm}
+          erro={erro}
+          saving={saving}
+          onSubmit={handleSalvar}
+          onClose={() => setModalNova(false)}
+        />
       )}
 
       {modalDetalhe && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#f1f5f9]">
-              <div>
-                <h2 className="font-semibold text-[#0f172a]">{modalDetalhe.paciente?.nome}</h2>
-                <p className="text-xs text-[#64748b] mt-0.5">{format(parseISO(modalDetalhe.data_hora), "EEEE, dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-              </div>
-              <button onClick={() => setModalDetalhe(null)} className="text-[#94a3b8] hover:text-[#3b82f6] transition-colors"><X className="w-5 h-5" strokeWidth={1.75} /></button>
-            </div>
-            <div className="p-6 space-y-3 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748b]">Duração</span>
-                <span className="font-medium text-[#0f172a]">{modalDetalhe.duracao_min} min</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748b]">Valor</span>
-                <span className="font-semibold text-[#0f172a]">{Number(modalDetalhe.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748b]">Status</span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[modalDetalhe.status]}`}>{STATUS_LABEL[modalDetalhe.status]}</span>
-              </div>
-              {/* Pagamento — só para sessões realizadas */}
-              {modalDetalhe.status === 'realizado' && (
-                <div className="pt-2 border-t border-[#f1f5f9]">
-                  <p className="text-[#64748b] text-xs mb-2 font-medium uppercase tracking-wide">Pagamento</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['pendente', 'pago', 'isento'] as const).map(op => {
-                      const cfg = PAGAMENTO_CONFIG[op]
-                      const ativo = (modalDetalhe.pagamento_status ?? 'pendente') === op
-                      return (
-                        <button
-                          key={op}
-                          onClick={() => alterarPagamento(modalDetalhe, op)}
-                          className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                            ativo
-                              ? `${cfg.cls} ring-2 ring-offset-1 ring-current`
-                              : 'bg-white border-[#e2e8f0] text-[#94a3b8] hover:border-[#cbd5e1]'
-                          }`}
-                        >
-                          <cfg.icon className="w-4 h-4" strokeWidth={1.75} />
-                          {cfg.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {modalDetalhe.observacoes && (
-                <div className="pt-1 border-t border-[#f1f5f9]">
-                  <p className="text-[#64748b] text-xs mb-1">Observações</p>
-                  <p className="text-[#0f172a]">{modalDetalhe.observacoes}</p>
-                </div>
-              )}
-            </div>
-            {modalDetalhe.status === 'agendado' && (
-              <div className="px-6 pb-6 space-y-2">
-                <div className="grid grid-cols-3 gap-2">
-                  <button onClick={() => marcarRealizado(modalDetalhe)} className="flex flex-col items-center justify-center gap-1.5 bg-[#eff6ff] text-[#2563eb] py-3 rounded-xl text-xs font-medium hover:bg-[#dbeafe] transition-colors">
-                    <CheckCircle2 className="w-4 h-4" strokeWidth={2} /> Realizada
-                  </button>
-                  <button onClick={() => marcarFaltou(modalDetalhe)} className="flex flex-col items-center justify-center gap-1.5 bg-orange-50 text-orange-700 py-3 rounded-xl text-xs font-medium hover:bg-orange-100 transition-colors">
-                    <UserX className="w-4 h-4" strokeWidth={2} /> Faltou
-                  </button>
-                  <button onClick={() => marcarCancelado(modalDetalhe)} className="flex flex-col items-center justify-center gap-1.5 bg-red-50 text-red-700 py-3 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors">
-                    <XCircle className="w-4 h-4" strokeWidth={2} /> Cancelar
-                  </button>
-                </div>
-              </div>
-            )}
-            {modalDetalhe.status === 'realizado' && (
-              <div className="px-6 pb-6 space-y-2">
-                <button onClick={() => abrirNotas(modalDetalhe)} className="w-full flex items-center justify-center gap-2 bg-[#eff6ff] text-[#2563eb] py-2.5 rounded-xl text-sm font-medium hover:bg-[#dbeafe] transition-colors">
-                  <FileEdit className="w-4 h-4" strokeWidth={1.75} /> {modalDetalhe.notas_clinicas ? 'Editar notas clínicas' : 'Adicionar notas clínicas'}
-                </button>
-                <button onClick={() => gerarRecibo(modalDetalhe)} className="w-full flex items-center justify-center gap-2 bg-[#1e3a8a] text-white py-2.5 rounded-xl text-sm font-medium hover:bg-[#1d4ed8] transition-colors">
-                  Gerar recibo
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <ModalDetalheSessao
+          sessao={modalDetalhe}
+          onClose={() => setModalDetalhe(null)}
+          onMarcarRealizado={marcarRealizado}
+          onMarcarFaltou={marcarFaltou}
+          onMarcarCancelado={marcarCancelado}
+          onAbrirNotas={abrirNotas}
+          onGerarRecibo={gerarRecibo}
+          onAlterarPagamento={alterarPagamento}
+        />
       )}
 
-      {/* Modal Notas Clínicas */}
       {modalNotas && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <div>
-                <h2 className="font-semibold text-gray-900">Notas Clínicas</h2>
-                <p className="text-xs text-gray-500 mt-0.5">{modalNotas.paciente?.nome} · {format(parseISO(modalNotas.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-              </div>
-              <button onClick={() => setModalNotas(null)}><X className="w-5 h-5 text-gray-400" /></button>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">Notas clínicas</label>
-                <button
-                  type="button"
-                  onClick={() => audioInputRef.current?.click()}
-                  disabled={transcrevendo}
-                  title="Transcreve o áudio e gera prontuário SOAP com IA"
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#eff6ff] text-[#2563eb] hover:bg-[#dbeafe] disabled:opacity-50 transition-colors font-medium"
-                >
-                  {transcrevendo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mic className="w-3.5 h-3.5" />}
-                  {transcrevendo ? 'Transcrevendo...' : 'Transcrever consulta'}
-                </button>
-                <input
-                  ref={audioInputRef}
-                  type="file"
-                  accept="audio/*,.mp3,.mp4,.m4a,.wav,.webm,.ogg"
-                  className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) transcreverAudio(f); e.target.value = '' }}
-                />
-              </div>
-              <textarea
-                value={notas}
-                onChange={e => setNotas(e.target.value)}
-                rows={8}
-                placeholder="Registre sua evolução clínica, ou clique em 'Transcrever consulta' para gerar um prontuário SOAP automaticamente a partir do áudio da sessão..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] outline-none resize-none text-gray-800 placeholder:text-gray-400"
-              />
-              <p className="text-xs text-gray-400 mt-1.5">Notas confidenciais — visíveis apenas para você. A transcrição gera prontuário no formato SOAP via IA.</p>
-              <div className="flex justify-end gap-3 mt-4">
-                <button onClick={() => setModalNotas(null)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                <button onClick={salvarNotas} disabled={savingNotas} className="flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#1d4ed8] disabled:opacity-60">
-                  {savingNotas ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Salvar notas
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ModalNotas
+          sessao={modalNotas}
+          notas={notas}
+          setNotas={setNotas}
+          savingNotas={savingNotas}
+          transcrevendo={transcrevendo}
+          audioInputRef={audioInputRef}
+          onSalvar={salvarNotas}
+          onClose={() => setModalNotas(null)}
+          onTranscrever={transcreverAudio}
+        />
       )}
     </div>
   )

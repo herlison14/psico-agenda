@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Sessao, Paciente } from '@/types/psico'
 import { format, parseISO } from 'date-fns'
@@ -50,7 +50,7 @@ export default function HistoricoPage() {
   const [transcricao, setTranscricao] = useState('')
   const [atualizandoPag, setAtualizandoPag] = useState<string | null>(null)
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const [resPac, resSes] = await Promise.all([
@@ -72,9 +72,9 @@ export default function HistoricoPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
 
-  useEffect(() => { load() }, [id])
+  useEffect(() => { load() }, [load])
 
   function abrirEdicao(sessao: Sessao) {
     setEditando(sessao)

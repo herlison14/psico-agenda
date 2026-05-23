@@ -1,25 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Paciente } from '@/types/psico'
 import { Plus, Search, Edit2, Users, X, Loader2, UserCheck, UserMinus, BookOpen, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { maskCPF, maskPhone } from '@/lib/utils'
 
 const PAGE_SIZE = 15
-
-function maskCPF(v: string) {
-  return v.replace(/\D/g, '').slice(0, 11)
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-}
-
-function maskPhone(v: string) {
-  const d = v.replace(/\D/g, '').slice(0, 11)
-  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-}
 
 const EMPTY: Partial<Paciente> = {
   nome: '', cpf: '', email: '', telefone: '', valor_sessao: 150, ativo: true
@@ -39,7 +27,7 @@ export default function PacientesPage() {
   const [erro, setErro] = useState('')
   const [pagina, setPagina] = useState(1)
 
-  async function loadPacientes() {
+  const loadPacientes = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/pacientes')
@@ -56,9 +44,9 @@ export default function PacientesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { loadPacientes() }, [session])
+  useEffect(() => { loadPacientes() }, [session, loadPacientes])
 
   function openNew() { setForm(EMPTY); setEditId(null); setErro(''); setModalOpen(true) }
   function openEdit(p: Paciente) { setForm(p); setEditId(p.id); setErro(''); setModalOpen(true) }
