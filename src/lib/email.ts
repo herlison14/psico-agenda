@@ -1,36 +1,27 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-function createTransport() {
-  const host = process.env.SMTP_HOST
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
-
-  if (!host || !user || !pass) return null
-
-  return nodemailer.createTransport({
-    host,
-    port: parseInt(process.env.SMTP_PORT ?? '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user, pass },
-  })
+function getResend(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    console.warn('[email] RESEND_API_KEY não configurado — e-mails desativados')
+    return null
+  }
+  return new Resend(apiKey)
 }
 
-export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<boolean> {
-  const transport = createTransport()
+const FROM = process.env.EMAIL_FROM ?? 'PsiPlanner <onboarding@resend.dev>'
 
-  if (!transport) {
-    console.warn('[email] SMTP não configurado. Variáveis necessárias: SMTP_HOST, SMTP_USER, SMTP_PASS')
+export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<boolean> {
+  const resend = getResend()
+  if (!resend) {
     console.log(`[email] Link de recuperação para ${to}: ${resetUrl}`)
     return false
   }
 
-  const from = process.env.EMAIL_FROM ?? `PsiPlanner <noreply@psiplanner.com.br>`
-
-  await transport.sendMail({
-    from,
+  const { error } = await resend.emails.send({
+    from: FROM,
     to,
     subject: 'Redefinição de senha — PsiPlanner',
-    text: `Olá,\n\nVocê solicitou a redefinição da sua senha. Clique no link abaixo para criar uma nova senha:\n\n${resetUrl}\n\nEste link expira em 1 hora. Se você não solicitou a redefinição, ignore este e-mail.\n\nEquipe PsiPlanner`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
         <div style="margin-bottom:24px">
@@ -48,13 +39,17 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
         </p>
         <hr style="border:none;border-top:1px solid #f1f5f9;margin:24px 0">
         <p style="color:#94a3b8;font-size:11px">
-          Caso o botão não funcione, copie e cole este link no navegador:<br>
+          Caso o botão não funcione, copie e cole este link:<br>
           <a href="${resetUrl}" style="color:#2563eb;word-break:break-all">${resetUrl}</a>
         </p>
       </div>
     `,
   })
 
+  if (error) {
+    console.error('[email] sendPasswordResetEmail error:', error)
+    return false
+  }
   return true
 }
 
@@ -65,12 +60,12 @@ export async function sendBookingNotificationEmail(
   dataHoraISO: string,
   confirmacaoUrl: string,
 ): Promise<boolean> {
-  const transport = createTransport()
-  if (!transport) {
-    console.warn('[email] SMTP não configurado — booking notification não enviado para', psicEmail)
+  const resend = getResend()
+  if (!resend) {
+    console.warn('[email] booking notification não enviado para', psicEmail)
     return false
   }
-  const from = process.env.EMAIL_FROM ?? `PsiPlanner <noreply@psiplanner.com.br>`
+
   const firstName = psicNome?.split(' ')[0] || 'Psicólogo(a)'
   const dtFormatada = new Date(dataHoraISO).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo',
@@ -82,11 +77,10 @@ export async function sendBookingNotificationEmail(
     minute: '2-digit',
   })
 
-  await transport.sendMail({
-    from,
+  const { error } = await resend.emails.send({
+    from: FROM,
     to: psicEmail,
     subject: `📅 Nova sessão agendada via July — ${pacNome}`,
-    text: `Olá, ${firstName}!\n\nUma nova sessão foi agendada pelo agente July:\n\nPaciente: ${pacNome}\nData/Hora: ${dtFormatada}\n\nComprovante: ${confirmacaoUrl}\n\nEquipe PsiPlanner`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
         <div style="margin-bottom:20px">
@@ -108,25 +102,28 @@ export async function sendBookingNotificationEmail(
       </div>
     `,
   })
+
+  if (error) {
+    console.error('[email] sendBookingNotificationEmail error:', error)
+    return false
+  }
   return true
 }
 
 export async function sendWelcomeEmail(to: string, nome: string): Promise<boolean> {
-  const transport = createTransport()
-  const from = process.env.EMAIL_FROM ?? `PsiPlanner <noreply@psiplanner.com.br>`
-  const loginUrl = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'https://psiplanner.com.br').replace(/\/$/, '') + '/dashboard'
-  const firstName = nome?.split(' ')[0] || 'Psicólogo(a)'
-
-  if (!transport) {
-    console.warn('[email] SMTP não configurado — welcome email não enviado para', to)
+  const resend = getResend()
+  if (!resend) {
+    console.warn('[email] welcome email não enviado para', to)
     return false
   }
 
-  await transport.sendMail({
-    from,
+  const firstName = nome?.split(' ')[0] || 'Psicólogo(a)'
+  const loginUrl = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'https://psiplanner.com.br').replace(/\/$/, '') + '/dashboard'
+
+  const { error } = await resend.emails.send({
+    from: FROM,
     to,
     subject: 'Bem-vindo(a) ao PsiPlanner! 🎉',
-    text: `Olá, ${firstName}!\n\nSua conta PsiPlanner foi criada com sucesso. Você tem 7 dias de trial gratuito para explorar todas as funcionalidades.\n\nAcesse agora: ${loginUrl}\n\nQualquer dúvida, responda este e-mail.\n\nEquipe PsiPlanner`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff">
         <div style="margin-bottom:28px">
@@ -159,5 +156,9 @@ export async function sendWelcomeEmail(to: string, nome: string): Promise<boolea
     `,
   })
 
+  if (error) {
+    console.error('[email] sendWelcomeEmail error:', error)
+    return false
+  }
   return true
 }
