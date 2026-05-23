@@ -20,7 +20,7 @@ Ao final de interações de agendamento, lembre discretamente: "*(Isso é uma de
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req)
-  if (!checkRateLimit(`demo:${ip}`, 15)) {
+  if (!await checkRateLimit(`demo:${ip}`, 15)) {
     return NextResponse.json({ error: 'Muitas mensagens. Aguarde alguns minutos.' }, { status: 429 })
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAdminToken } from '@/lib/admin-auth'
 import { randomBytes } from 'crypto'
+import { hash } from 'bcryptjs'
 import pool from '@/lib/db'
 
 type Acao =
@@ -34,7 +35,7 @@ export async function PUT(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await req.json() as { acao: Acao; email?: string; password_hash?: string }
+  const body = await req.json() as { acao: Acao; email?: string; password?: string }
   const { acao } = body
 
   // Ação especial: repara email + senha corrompidos/vazios
@@ -43,8 +44,13 @@ export async function PUT(
       const updates: string[] = []
       const vals: unknown[] = []
       let i = 1
-      if (body.email)         { updates.push(`email=$${i++}`);         vals.push(body.email) }
-      if (body.password_hash) { updates.push(`password_hash=$${i++}`); vals.push(body.password_hash) }
+      if (body.email) { updates.push(`email=$${i++}`); vals.push(body.email) }
+      if (body.password) {
+        if (body.password.length < 8)
+          return NextResponse.json({ error: 'Senha deve ter mínimo 8 caracteres.' }, { status: 400 })
+        updates.push(`password_hash=$${i++}`)
+        vals.push(await hash(body.password, 10))
+      }
       if (updates.length === 0)
         return NextResponse.json({ error: 'Nenhum campo para reparar.' }, { status: 400 })
       vals.push(id)
