@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Recibo } from '@/types/psico'
+import { Recibo, Psicologo } from '@/types/psico'
 import { usePsicologo } from '@/contexts/PsicologoContext'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { FileText, Download, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 function valorPorExtenso(valor: number): string {
   const reais = Math.floor(valor)
@@ -189,7 +190,7 @@ export default function RecibosPage() {
   }, [session])
 
   async function handleDownload(recibo: Recibo) {
-    if (!psicologo) { alert('Preencha seu perfil antes de gerar o PDF.'); return }
+    if (!psicologo) { toast.error('Preencha seu perfil antes de gerar o PDF.'); return }
     setDownloadingId(recibo.id)
     await gerarPDF(recibo, psicologo)
     setDownloadingId(null)

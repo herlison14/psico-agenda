@@ -51,6 +51,7 @@ export interface Paciente {
   cpf: string | null
   email: string | null
   telefone: string | null
+  data_nascimento: string | null
   valor_sessao: number
   ativo: boolean
   created_at: string

@@ -8,6 +8,7 @@ import {
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Plus, CalendarDays } from 'lucide-react'
+import { toast } from 'sonner'
 import { ModalNovaSessao } from './_components/ModalNovaSessao'
 import { ModalDetalheSessao } from './_components/ModalDetalheSessao'
 import { ModalNotas } from './_components/ModalNotas'
@@ -185,9 +186,9 @@ export default function AgendaPage() {
       const res = await fetch(`/api/sessoes/${modalNotas.id}/transcrever`, { method: 'POST', body: form })
       const data = await res.json()
       if (res.ok && data.prontuario) setNotas(data.prontuario)
-      else alert(data.error ?? 'Erro ao transcrever.')
+      else toast.error(data.error ?? 'Erro ao transcrever.')
     } catch {
-      alert('Erro de conexão ao transcrever.')
+      toast.error('Erro de conexão ao transcrever.')
     } finally {
       setTranscrevendo(false)
     }
@@ -221,7 +222,7 @@ export default function AgendaPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        alert(`Recibo #${data.numero} gerado com sucesso! Acesse a aba Recibos para baixar o PDF.`)
+        toast.success(`Recibo #${data.numero} gerado! Acesse a aba Recibos para baixar o PDF.`)
         setModalDetalhe(null)
       } else {
         setErro(data.error ?? 'Erro ao gerar recibo.')

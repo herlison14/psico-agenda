@@ -7,9 +7,10 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   ArrowLeft, BookOpen, CalendarDays, FileEdit, Loader2, Save, X,
-  CheckCircle2, XCircle, UserX, Clock, Banknote, CircleCheck, Gift,
+  CheckCircle2, XCircle, UserX, Clock, Banknote, CircleCheck, Gift, Download,
 } from 'lucide-react'
 import GravadorConsulta from '@/components/GravadorConsulta'
+import { usePsicologo } from '@/contexts/PsicologoContext'
 
 const STATUS_BADGE: Record<string, string> = {
   realizado: 'bg-[#eff6ff] text-[#2563eb]',
@@ -36,13 +37,83 @@ const PAG_CONFIG: Record<string, { label: string; cls: string; icon: React.React
   isento:   { label: 'Isento',   cls: 'bg-slate-50  text-slate-500  hover:bg-slate-100', icon: <Gift        className="w-3 h-3" /> },
 }
 
+async function exportarProntuarioPDF(paciente: Paciente, sessoes: Sessao[], psicNome?: string) {
+  const { default: jsPDF } = await import('jspdf')
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const pw = doc.internal.pageSize.getWidth()
+  const indigo: [number, number, number] = [79, 70, 229]
+  const gray: [number, number, number]   = [100, 116, 139]
+  const dark: [number, number, number]   = [17, 24, 39]
+
+  // Header
+  doc.setFillColor(...indigo)
+  doc.rect(0, 0, pw, 38, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(18); doc.setFont('helvetica', 'bold')
+  doc.text('PRONTUÁRIO CLÍNICO', pw / 2, 16, { align: 'center' })
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal')
+  doc.text(paciente.nome ?? '', pw / 2, 25, { align: 'center' })
+  if (psicNome) doc.text(`Profissional: ${psicNome}`, pw / 2, 32, { align: 'center' })
+
+  let y = 48
+  // Patient info
+  doc.setTextColor(...gray); doc.setFontSize(8); doc.setFont('helvetica', 'bold')
+  doc.text('DADOS DO PACIENTE', 20, y); y += 5
+  doc.setTextColor(...dark); doc.setFontSize(9); doc.setFont('helvetica', 'normal')
+  const infos = [
+    paciente.cpf ? `CPF: ${paciente.cpf}` : null,
+    paciente.telefone ? `Tel: ${paciente.telefone}` : null,
+    paciente.email ? `E-mail: ${paciente.email}` : null,
+    paciente.data_nascimento ? `Nasc.: ${format(parseISO(paciente.data_nascimento), 'dd/MM/yyyy')}` : null,
+  ].filter(Boolean) as string[]
+  infos.forEach(info => { doc.text(info, 20, y); y += 5 })
+  y += 4
+
+  // Sessions with notes
+  const sessoesCom = sessoes.filter(s => s.status === 'realizado' && s.notas_clinicas)
+  doc.setTextColor(...gray); doc.setFontSize(8); doc.setFont('helvetica', 'bold')
+  doc.text(`SESSÕES COM ANOTAÇÕES CLÍNICAS (${sessoesCom.length})`, 20, y); y += 6
+
+  for (const s of sessoesCom) {
+    if (y > 260) { doc.addPage(); y = 20 }
+    doc.setFillColor(249, 250, 251)
+    doc.roundedRect(20, y - 4, pw - 40, 8, 1, 1, 'F')
+    doc.setTextColor(...indigo); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+    doc.text(format(parseISO(s.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }), 24, y)
+    doc.setTextColor(...gray); doc.setFont('helvetica', 'normal')
+    doc.text(`Duração: ${s.duracao_min} min`, pw - 60, y); y += 8
+
+    if (s.notas_clinicas) {
+      const lines = doc.splitTextToSize(s.notas_clinicas, pw - 48) as string[]
+      doc.setTextColor(...dark); doc.setFontSize(8.5)
+      for (const line of lines) {
+        if (y > 270) { doc.addPage(); y = 20 }
+        doc.text(line, 24, y); y += 5
+      }
+    }
+    y += 6
+    doc.setDrawColor(229, 231, 235); doc.setLineWidth(0.3)
+    doc.line(20, y, pw - 20, y); y += 6
+  }
+
+  if (sessoesCom.length === 0) {
+    doc.setTextColor(...gray); doc.setFontSize(9); doc.setFont('helvetica', 'italic')
+    doc.text('Nenhuma sessão com anotações clínicas registrada.', 20, y)
+  }
+
+  const filename = `prontuario-${(paciente.nome ?? 'paciente').replace(/\s+/g, '-').toLowerCase()}.pdf`
+  doc.save(filename)
+}
+
 export default function HistoricoPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { psicologo } = usePsicologo()
 
   const [paciente, setPaciente] = useState<Paciente | null>(null)
   const [sessoes, setSessoes] = useState<Sessao[]>([])
   const [loading, setLoading] = useState(true)
+  const [exportando, setExportando] = useState(false)
 
   const [editando, setEditando]       = useState<Sessao | null>(null)
   const [notas, setNotas]             = useState('')
@@ -129,6 +200,7 @@ export default function HistoricoPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.back()}
+          aria-label="Voltar"
           className="p-2 hover:bg-[#eff6ff] rounded-xl text-[#64748b] hover:text-[#2563eb] transition-colors"
         >
           <ArrowLeft className="w-5 h-5" strokeWidth={1.75} />
@@ -136,7 +208,7 @@ export default function HistoricoPage() {
         <div className="bg-[#eff6ff] rounded-xl p-2.5">
           <BookOpen className="w-5 h-5 text-[#2563eb]" strokeWidth={1.75} />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-semibold text-[#0f172a]" style={{ fontFamily: 'var(--font-lora, Georgia, serif)' }}>
             Histórico Clínico
           </h1>
@@ -144,6 +216,20 @@ export default function HistoricoPage() {
             <p className="text-sm text-[#64748b]">{paciente.nome}</p>
           )}
         </div>
+        {paciente && (
+          <button
+            onClick={async () => {
+              setExportando(true)
+              try { await exportarProntuarioPDF(paciente, sessoes, psicologo?.nome ?? undefined) }
+              finally { setExportando(false) }
+            }}
+            disabled={exportando || loading}
+            className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-400 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {exportando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {exportando ? 'Gerando PDF...' : 'Prontuário PDF'}
+          </button>
+        )}
       </div>
 
       {loading ? (

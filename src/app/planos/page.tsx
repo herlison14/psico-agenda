@@ -3,7 +3,8 @@
 import { useState, Suspense, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Brain, CheckCircle, ArrowLeft, Loader2, Copy, Check, QrCode, RefreshCw } from 'lucide-react'
+import { Brain, CheckCircle, ArrowLeft, Loader2, Copy, Check, QrCode, RefreshCw, ShieldCheck, MessageCircle, ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 
 const RECURSOS = [
   'Agenda semanal ilimitada',
@@ -16,6 +17,45 @@ const RECURSOS = [
   'Link de agendamento público',
   'Suporte por e-mail',
 ]
+
+const FAQ = [
+  {
+    q: 'Posso cancelar a qualquer momento?',
+    a: 'Sim. Não há fidelidade. Ao cancelar, você mantém o acesso Pro até o fim do período pago. Sem cobranças surpresa.',
+  },
+  {
+    q: 'Como funciona o pagamento via PIX?',
+    a: 'Ao clicar em "Assinar agora", geramos um QR Code PIX. Após o pagamento, seu plano é ativado automaticamente em segundos — sem esperar aprovação manual.',
+  },
+  {
+    q: 'O trial de 7 dias exige cartão de crédito?',
+    a: 'Não. O trial é completamente gratuito, sem necessidade de cartão ou qualquer dado financeiro. Você só paga se quiser continuar.',
+  },
+  {
+    q: 'Meus dados de pacientes são seguros?',
+    a: 'Sim. Os dados são armazenados em PostgreSQL criptografado (Railway), com HTTPS em todas as conexões. Seguimos as diretrizes da LGPD.',
+  },
+  {
+    q: 'Posso exportar meus dados se sair?',
+    a: 'Sim. Você pode exportar sessões e financeiro em CSV, e gerar PDFs de recibos. Seus dados sempre pertencem a você.',
+  },
+]
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-b border-[#e2e8f0] last:border-0">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between py-4 text-left text-sm font-medium text-[#0f172a] hover:text-[#2563eb] transition-colors gap-3"
+      >
+        <span>{q}</span>
+        <ChevronDown className={`w-4 h-4 shrink-0 text-[#64748b] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <p className="pb-4 text-sm text-[#64748b] leading-relaxed">{a}</p>}
+    </div>
+  )
+}
 
 type PixData = {
   payment_id: string
@@ -147,10 +187,10 @@ function PlanosContent() {
       if (data.qr_code) {
         setPix(data as PixData)
       } else {
-        alert(data.error ?? 'Erro ao gerar cobrança PIX.')
+        toast.error(data.error ?? 'Erro ao gerar cobrança PIX.')
       }
     } catch {
-      alert('Erro de conexão. Tente novamente.')
+      toast.error('Erro de conexão. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -186,12 +226,19 @@ function PlanosContent() {
           </div>
         )}
 
-        <div className="text-center mb-12">
+        {/* Hero */}
+        <div className="text-center mb-10">
+          {/* Social proof badge */}
+          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            Usado por psicólogos em todo o Brasil
+          </div>
           <h1 className="text-3xl font-bold text-[#0f172a] mb-3">Planos PsiPlanner</h1>
           <p className="text-[#64748b]">7 dias grátis para testar. Sem cartão de crédito.</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        {/* Pricing cards */}
+        <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
           {/* Trial */}
           <div className="bg-white rounded-2xl border border-[#e2e8f0] p-8 shadow-sm">
             <p className="text-sm font-semibold text-[#64748b] uppercase tracking-wide mb-2">Trial</p>
@@ -246,7 +293,80 @@ function PlanosContent() {
           </div>
         </div>
 
-        <div className="text-center mt-10">
+        {/* Garantia / Risk reversal */}
+        <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-2xl p-4 max-w-2xl mx-auto mb-12">
+          <ShieldCheck className="w-8 h-8 text-indigo-600 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-indigo-900">7 dias de teste sem risco</p>
+            <p className="text-xs text-indigo-700 mt-0.5">
+              Se não gostar durante o trial, basta não assinar. Sem cobranças, sem burocracia.
+            </p>
+          </div>
+        </div>
+
+        {/* Feature comparison table */}
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden max-w-2xl mx-auto mb-12 shadow-sm">
+          <div className="bg-[#f8fafc] px-6 py-3 border-b border-[#e2e8f0]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#64748b]">Comparativo de recursos</p>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#e2e8f0]">
+                <th className="text-left px-6 py-3 font-medium text-[#64748b]">Recurso</th>
+                <th className="text-center px-4 py-3 font-medium text-[#64748b]">Trial</th>
+                <th className="text-center px-4 py-3 font-semibold text-[#1e3a8a]">Pro</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f1f5f9]">
+              {[
+                ['Agenda & sessões', true, true],
+                ['Gestão de pacientes', true, true],
+                ['Recibos em PDF', true, true],
+                ['Financeiro & Carnê-Leão', true, true],
+                ['Agente JULY (IA)', true, true],
+                ['Prontuário SOAP (IA)', true, true],
+                ['Transcrição de áudio', true, true],
+                ['Link de agendamento público', true, true],
+                ['Suporte prioritário', false, true],
+                ['Uso ilimitado sem interrupção', false, true],
+              ].map(([feat, trial, pro]) => (
+                <tr key={feat as string}>
+                  <td className="px-6 py-2.5 text-[#334155]">{feat as string}</td>
+                  <td className="text-center px-4 py-2.5">
+                    {trial ? <CheckCircle className="w-4 h-4 text-[#2563eb] mx-auto" /> : <span className="text-[#cbd5e1] text-lg">—</span>}
+                  </td>
+                  <td className="text-center px-4 py-2.5">
+                    {pro ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" /> : <span className="text-[#cbd5e1] text-lg">—</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* FAQ */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <h2 className="text-lg font-bold text-[#0f172a] mb-4">Perguntas frequentes</h2>
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] px-6 shadow-sm">
+            {FAQ.map(item => <FaqItem key={item.q} {...item} />)}
+          </div>
+        </div>
+
+        {/* WhatsApp CTA */}
+        <div className="text-center mb-10">
+          <p className="text-sm text-[#64748b] mb-3">Alguma dúvida antes de assinar?</p>
+          <a
+            href="https://wa.me/5521997927927?text=Oi%2C+tenho+interesse+no+PsiPlanner+e+gostaria+de+tirar+uma+d%C3%BAvida."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Falar no WhatsApp
+          </a>
+        </div>
+
+        <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[#64748b] hover:text-[#334155] transition-colors">
             <ArrowLeft className="w-4 h-4" /> Voltar para o início
           </Link>

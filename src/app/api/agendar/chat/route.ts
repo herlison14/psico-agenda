@@ -4,6 +4,7 @@ import { z } from 'zod'
 import pool from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { ensurePacientesSchema } from '@/lib/ensure-schema'
+import { sendBookingNotificationEmail } from '@/lib/email'
 
 const HORARIOS_PADRAO = [8, 9, 10, 11, 14, 15, 16, 17]
 
@@ -34,13 +35,13 @@ export async function POST(req: NextRequest) {
 
   // Busca psicólogo
   const { rows: psicRows } = await pool.query(
-    `SELECT id, nome, plano FROM psicologos WHERE id = $1`,
+    `SELECT id, nome, email, plano FROM psicologos WHERE id = $1`,
     [psicologo_id],
   )
   if (psicRows.length === 0)
     return NextResponse.json({ error: 'Link de agendamento inválido.' }, { status: 404 })
 
-  const psic = psicRows[0]
+  const psic = psicRows[0] as { id: string; nome: string; email: string | null; plano: string }
   if (psic.plano === 'bloqueado')
     return NextResponse.json({ error: 'Agendamento temporariamente indisponível.' }, { status: 403 })
 
@@ -256,6 +257,18 @@ Data/hora atual: ${agora}`
             })
             const baseUrl = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'https://psiplanner.com.br').replace(/\/$/, '')
             const confirmacaoUrl = `${baseUrl}/api/confirmacao/${rows[0].id}`
+
+            // Notifica o psicólogo por e-mail (fire-and-forget)
+            if (psic.email) {
+              sendBookingNotificationEmail(
+                psic.email,
+                psic.nome ?? 'Profissional',
+                paciente_nome || 'Paciente',
+                rows[0].data_hora,
+                confirmacaoUrl,
+              ).catch(err => console.warn('[agendar_sessao] email notification failed:', err))
+            }
+
             return { sucesso: true, sessao_id: rows[0].id, data_hora_formatada: dtFormatada, confirmacao_url: confirmacaoUrl }
           },
         }),

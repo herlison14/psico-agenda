@@ -127,13 +127,12 @@ export default function FinanceiroPage() {
   const ticketMedio    = grupos.realizado.length > 0
     ? totalRecebido / grupos.realizado.length : 0
 
-  /* Export CSV */
+  /* Export CSV — geral */
   function exportarCSV() {
-    const cab  = 'Data,Paciente,Status,Pagamento,Valor'
+    const cab  = 'Data,Paciente,Status,Pagamento,Valor (R$)'
     const rows = sessoes.map(s => [
       fmtDt(s.data_hora),
       `"${s.paciente?.nome ?? ''}"`,
-      // CPF omitido da exportação por exigência da LGPD (dado sensível)
       s.status,
       s.pagamento_status ?? 'pendente',
       Number(s.valor).toFixed(2).replace('.', ','),
@@ -142,6 +141,47 @@ export default function FinanceiroPage() {
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url  = URL.createObjectURL(blob)
     const a    = Object.assign(document.createElement('a'), { href: url, download: `financeiro-${String(mes + 1).padStart(2, '0')}-${ano}.csv` })
+    a.click(); URL.revokeObjectURL(url)
+  }
+
+  /* Export Carnê-Leão — apenas sessões recebidas (pagas) */
+  function exportarCarneLeao() {
+    const competencia = `${String(mes + 1).padStart(2, '0')}/${ano}`
+    const pagas = sessoes.filter(
+      s => s.status === 'realizado' && (s.pagamento_status ?? 'pendente') === 'pago'
+    )
+    const total = pagas.reduce((acc, s) => acc + Number(s.valor), 0)
+
+    // Header informativo
+    const header = [
+      `"Carnê-Leão — Rendimentos Recebidos"`,
+      `"Competência: ${competencia}"`,
+      `"Natureza: Prestação de Serviços de Saúde (autônomo)"`,
+      `"Código da Receita: 0190 — Prestação de Serviços"`,
+      '',
+    ].join('\n')
+
+    const cab  = 'Data Recebimento,Nome do Pagador,Descrição,Valor Recebido (R$)'
+    const rows = pagas.map(s => [
+      format(parseISO(s.data_hora), 'dd/MM/yyyy'),
+      `"${s.paciente?.nome ?? 'Paciente'}"`,
+      '"Consulta psicológica — prestação de serviços"',
+      Number(s.valor).toFixed(2).replace('.', ','),
+    ].join(','))
+    const rodape = [
+      '',
+      `"TOTAL RECEBIDO NO MÊS",,,"${total.toFixed(2).replace('.', ',')}"`,
+      '',
+      '"ATENÇÃO: Informe estes valores no Carnê-Leão Web (https://cav.receita.fazenda.gov.br)"',
+    ].join('\n')
+
+    const csv  = [header, cab, ...rows, rodape].join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = Object.assign(document.createElement('a'), {
+      href: url,
+      download: `carne-leao-${String(mes + 1).padStart(2, '0')}-${ano}.csv`,
+    })
     a.click(); URL.revokeObjectURL(url)
   }
 
@@ -158,8 +198,11 @@ export default function FinanceiroPage() {
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <button onClick={exportarCSV} disabled={sessoes.length === 0} className="btn-primary">
-          <Download className="w-4 h-4" /> Exportar CSV
+        <button onClick={exportarCSV} disabled={sessoes.length === 0} className="btn-ghost text-sm">
+          <Download className="w-4 h-4" /> CSV
+        </button>
+        <button onClick={exportarCarneLeao} disabled={sessoes.length === 0} className="btn-primary">
+          <Download className="w-4 h-4" /> Carnê-Leão IR
         </button>
       </PageHeader>
 

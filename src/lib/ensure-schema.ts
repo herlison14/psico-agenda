@@ -41,6 +41,10 @@ export async function ensureSessoesSchema() {
     'sessoes_pagamento_status',
     `ALTER TABLE sessoes ADD COLUMN IF NOT EXISTS pagamento_status TEXT NOT NULL DEFAULT 'pendente'`,
   )
+  await run(
+    'sessoes_lembrete_enviado',
+    'ALTER TABLE sessoes ADD COLUMN IF NOT EXISTS lembrete_enviado BOOLEAN DEFAULT FALSE',
+  )
 }
 
 export async function ensureRateLimitsSchema() {

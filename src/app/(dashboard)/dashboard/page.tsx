@@ -15,6 +15,7 @@ import { StatCard } from '@/components/ui/stat-card'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { safeJson } from '@/lib/utils'
+import { OnboardingModal } from '@/components/OnboardingModal'
 
 const STATUS_BADGE: Record<string, { variant: 'blue' | 'green' | 'red' | 'amber' | 'neutral'; label: string }> = {
   agendado:  { variant: 'blue',    label: 'Agendado'  },
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const [loading, setLoading]             = useState(true)
   const [erro, setErro]                   = useState<string | null>(null)
   const [copiado, setCopiado]             = useState(false)
+  const semPerfil = !psicologo
 
   useEffect(() => {
     if (status === 'loading') return
@@ -119,6 +121,15 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {/* Onboarding modal — shown to new users with incomplete setup */}
+      {!loading && (
+        <OnboardingModal
+          semPerfil={semPerfil}
+          semPacientes={pacientesAtivos === 0}
+          userId={session?.user?.id}
+        />
+      )}
+
       {/* Erro */}
       {erro && (
         <div className="bg-[--color-danger-bg] border border-red-200 text-[--color-danger] px-4 py-3 rounded-2xl text-sm mb-6">

@@ -58,6 +58,59 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
   return true
 }
 
+export async function sendBookingNotificationEmail(
+  psicEmail: string,
+  psicNome: string,
+  pacNome: string,
+  dataHoraISO: string,
+  confirmacaoUrl: string,
+): Promise<boolean> {
+  const transport = createTransport()
+  if (!transport) {
+    console.warn('[email] SMTP não configurado — booking notification não enviado para', psicEmail)
+    return false
+  }
+  const from = process.env.EMAIL_FROM ?? `PsiPlanner <noreply@psiplanner.com.br>`
+  const firstName = psicNome?.split(' ')[0] || 'Psicólogo(a)'
+  const dtFormatada = new Date(dataHoraISO).toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  await transport.sendMail({
+    from,
+    to: psicEmail,
+    subject: `📅 Nova sessão agendada via July — ${pacNome}`,
+    text: `Olá, ${firstName}!\n\nUma nova sessão foi agendada pelo agente July:\n\nPaciente: ${pacNome}\nData/Hora: ${dtFormatada}\n\nComprovante: ${confirmacaoUrl}\n\nEquipe PsiPlanner`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
+        <div style="margin-bottom:20px">
+          <span style="font-size:18px;font-weight:700;color:#1e3a8a">PsiPlanner</span>
+        </div>
+        <div style="background:#eff6ff;border-radius:12px;padding:20px;margin-bottom:20px">
+          <p style="color:#1e40af;font-size:13px;font-weight:600;margin:0 0 4px">📅 Nova sessão agendada via July</p>
+          <h2 style="font-size:18px;color:#0f172a;margin:0">${pacNome}</h2>
+          <p style="color:#3b82f6;font-size:14px;margin:8px 0 0;font-weight:500">${dtFormatada}</p>
+        </div>
+        <p style="color:#64748b;font-size:14px;margin-bottom:20px">
+          Olá, ${firstName}! Um novo agendamento foi realizado pelo agente July. Clique abaixo para ver o comprovante.
+        </p>
+        <a href="${confirmacaoUrl}" style="display:inline-block;background:#1e3a8a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">
+          Ver comprovante
+        </a>
+        <hr style="border:none;border-top:1px solid #f1f5f9;margin:24px 0">
+        <p style="color:#94a3b8;font-size:12px">Acesse sua agenda em <a href="https://www.psiplanner.com.br/agenda" style="color:#2563eb">psiplanner.com.br</a></p>
+      </div>
+    `,
+  })
+  return true
+}
+
 export async function sendWelcomeEmail(to: string, nome: string): Promise<boolean> {
   const transport = createTransport()
   const from = process.env.EMAIL_FROM ?? `PsiPlanner <noreply@psiplanner.com.br>`

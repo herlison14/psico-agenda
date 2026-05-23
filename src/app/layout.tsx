@@ -7,8 +7,25 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const lora = Lora({ subsets: ['latin'], variable: '--font-lora' })
 
 export const metadata: Metadata = {
-  title: 'PsiPlanner',
-  description: 'Gestão de agenda, pacientes e financeiro para profissionais de saúde',
+  title: {
+    default: 'PsiPlanner — Gestão para psicólogos',
+    template: '%s | PsiPlanner',
+  },
+  description: 'Gestão de agenda, pacientes e financeiro para profissionais de saúde mental.',
+  metadataBase: new URL('https://www.psiplanner.com.br'),
+  openGraph: {
+    siteName: 'PsiPlanner',
+    type: 'website',
+    locale: 'pt_BR',
+    title: 'PsiPlanner — Gestão para psicólogos',
+    description: 'Gestão de agenda, pacientes e financeiro para profissionais de saúde mental.',
+    url: 'https://www.psiplanner.com.br',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'PsiPlanner — Gestão para psicólogos',
+    description: 'Gestão de agenda, pacientes e financeiro para profissionais de saúde mental.',
+  },
 }
 
 export default function RootLayout({

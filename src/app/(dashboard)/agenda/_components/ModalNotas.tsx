@@ -1,6 +1,6 @@
 'use client'
 
-import { RefObject } from 'react'
+import { type RefObject } from 'react'
 import { Sessao } from '@/types/psico'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -12,7 +12,7 @@ interface Props {
   setNotas: (v: string) => void
   savingNotas: boolean
   transcrevendo: boolean
-  audioInputRef: RefObject<HTMLInputElement>
+  audioInputRef: RefObject<HTMLInputElement | null>
   onSalvar: () => void
   onClose: () => void
   onTranscrever: (file: File) => void
@@ -23,16 +23,16 @@ export function ModalNotas({
   audioInputRef, onSalvar, onClose, onTranscrever,
 }: Props) {
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-notas-title">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div>
-            <h2 className="font-semibold text-gray-900">Notas Clínicas</h2>
+            <h2 id="modal-notas-title" className="font-semibold text-gray-900">Notas Clínicas</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               {sessao.paciente?.nome} · {format(parseISO(sessao.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
-          <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+          <button onClick={onClose} aria-label="Fechar"><X className="w-5 h-5 text-gray-400" /></button>
         </div>
         <div className="p-6">
           <div className="flex items-center justify-between mb-2">

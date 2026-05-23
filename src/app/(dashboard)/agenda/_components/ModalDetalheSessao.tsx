@@ -42,16 +42,16 @@ export function ModalDetalheSessao({
   onAbrirNotas, onGerarRecibo, onAlterarPagamento,
 }: Props) {
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-detalhe-title">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#f1f5f9]">
           <div>
-            <h2 className="font-semibold text-[#0f172a]">{sessao.paciente?.nome}</h2>
+            <h2 id="modal-detalhe-title" className="font-semibold text-[#0f172a]">{sessao.paciente?.nome}</h2>
             <p className="text-xs text-[#64748b] mt-0.5">
               {format(parseISO(sessao.data_hora), "EEEE, dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
-          <button onClick={onClose} className="text-[#94a3b8] hover:text-[#3b82f6] transition-colors">
+          <button onClick={onClose} aria-label="Fechar" className="text-[#94a3b8] hover:text-[#3b82f6] transition-colors">
             <X className="w-5 h-5" strokeWidth={1.75} />
           </button>
         </div>
