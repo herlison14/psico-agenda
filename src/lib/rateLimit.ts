@@ -8,9 +8,13 @@
  *   - Se a janela mudou → reseta para count=1
  */
 import pool from '@/lib/db'
+import { ensureRateLimitsSchema } from '@/lib/ensure-schema'
 import type { NextRequest } from 'next/server'
 
 const WINDOW_MIN = 15
+
+// Ensure the rate_limits table exists once per cold start
+ensureRateLimitsSchema().catch((err) => console.warn('[rateLimit] schema init:', err))
 
 /** Retorna o timestamp do início da janela de 15 minutos atual */
 function currentWindow(): Date {
@@ -26,16 +30,6 @@ function currentWindow(): Date {
 export async function checkRateLimit(key: string, max: number): Promise<boolean> {
   const windowStart = currentWindow()
   try {
-    // Garante que a tabela existe (lazy migration)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS rate_limits (
-        key          TEXT        NOT NULL,
-        window_start TIMESTAMPTZ NOT NULL,
-        count        INT         NOT NULL DEFAULT 1,
-        PRIMARY KEY (key)
-      )
-    `)
-
     const { rows } = await pool.query<{ count: number }>(`
       INSERT INTO rate_limits (key, window_start, count)
       VALUES ($1, $2, 1)

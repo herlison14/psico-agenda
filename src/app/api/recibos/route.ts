@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import pool from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { isDemoMode, DEMO_RECIBOS } from '@/lib/mockData'
+import { checkPlanActive } from '@/lib/plan-guard'
 
 export async function GET() {
   if (isDemoMode()) return NextResponse.json(DEMO_RECIBOS)
@@ -38,6 +39,9 @@ export async function POST(req: NextRequest) {
 
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const planError = await checkPlanActive(session.user.id)
+  if (planError) return planError
 
   const { paciente_id, sessao_id, valor, data_emissao, descricao } = await req.json()
 

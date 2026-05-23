@@ -43,6 +43,18 @@ export async function ensureSessoesSchema() {
   )
 }
 
+export async function ensureRateLimitsSchema() {
+  await run(
+    'rate_limits_table',
+    `CREATE TABLE IF NOT EXISTS rate_limits (
+      key          TEXT        NOT NULL,
+      window_start TIMESTAMPTZ NOT NULL,
+      count        INT         NOT NULL DEFAULT 1,
+      PRIMARY KEY (key)
+    )`,
+  )
+}
+
 export async function ensurePsicologosSchema() {
   await run(
     'psicologos_plano',

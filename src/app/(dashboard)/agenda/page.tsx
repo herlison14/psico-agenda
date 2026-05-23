@@ -151,35 +151,28 @@ export default function AgendaPage() {
     }
   }
 
-  async function marcarRealizado(sessao: Sessao) {
-    await fetch(`/api/sessoes/${sessao.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'realizado' }),
-    })
-    setModalDetalhe(null)
-    loadSessoes()
+  async function marcarStatus(sessao: Sessao, status: 'realizado' | 'cancelado' | 'faltou') {
+    try {
+      const res = await fetch(`/api/sessoes/${sessao.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        setErro(d.error ?? 'Erro ao atualizar sessão.')
+        return
+      }
+      setModalDetalhe(null)
+      loadSessoes()
+    } catch {
+      setErro('Erro de conexão. Tente novamente.')
+    }
   }
 
-  async function marcarCancelado(sessao: Sessao) {
-    await fetch(`/api/sessoes/${sessao.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'cancelado' }),
-    })
-    setModalDetalhe(null)
-    loadSessoes()
-  }
-
-  async function marcarFaltou(sessao: Sessao) {
-    await fetch(`/api/sessoes/${sessao.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'faltou' }),
-    })
-    setModalDetalhe(null)
-    loadSessoes()
-  }
+  const marcarRealizado  = (sessao: Sessao) => marcarStatus(sessao, 'realizado')
+  const marcarCancelado  = (sessao: Sessao) => marcarStatus(sessao, 'cancelado')
+  const marcarFaltou     = (sessao: Sessao) => marcarStatus(sessao, 'faltou')
 
   function abrirNotas(sessao: Sessao) {
     setModalNotas(sessao)
@@ -218,21 +211,27 @@ export default function AgendaPage() {
   }
 
   async function gerarRecibo(sessao: Sessao) {
-    const res = await fetch('/api/recibos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paciente_id: sessao.paciente_id,
-        sessao_id: sessao.id,
-        valor: sessao.valor,
-        data_emissao: format(parseISO(sessao.data_hora), 'yyyy-MM-dd'),
-        descricao: 'Consulta',
-      }),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      alert(`Recibo #${data.numero} gerado com sucesso! Acesse a aba Recibos para baixar o PDF.`)
-      setModalDetalhe(null)
+    try {
+      const res = await fetch('/api/recibos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: sessao.paciente_id,
+          sessao_id: sessao.id,
+          valor: sessao.valor,
+          data_emissao: format(parseISO(sessao.data_hora), 'yyyy-MM-dd'),
+          descricao: 'Consulta',
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert(`Recibo #${data.numero} gerado com sucesso! Acesse a aba Recibos para baixar o PDF.`)
+        setModalDetalhe(null)
+      } else {
+        setErro(data.error ?? 'Erro ao gerar recibo.')
+      }
+    } catch {
+      setErro('Erro de conexão. Tente novamente.')
     }
   }
 

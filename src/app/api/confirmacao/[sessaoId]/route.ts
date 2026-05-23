@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import pool from '@/lib/db'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PDFDocument = require('pdfkit') as typeof import('pdfkit')
 
@@ -12,9 +13,15 @@ const LIGHT = '#f8fafc'
 const GREEN = '#16a34a'
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ sessaoId: string }> },
 ) {
+  // Rate limit: 10 req/15min per IP to prevent enumeration
+  const ip = getClientIp(req)
+  if (!await checkRateLimit(`confirmacao:${ip}`, 10)) {
+    return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns minutos.' }, { status: 429 })
+  }
+
   const { sessaoId } = await params
   console.log('[confirmacao/pdf] req sessaoId=%s', sessaoId)
 
@@ -41,6 +48,8 @@ export async function GET(
       console.warn('[confirmacao/pdf] sessão não encontrada: %s', sessaoId)
       return NextResponse.json({ error: 'Sessão não encontrada.' }, { status: 404 })
     }
+    // LGPD: expose only first name to minimize PII in this unauthenticated endpoint
+    rows[0].paciente_nome = rows[0].paciente_nome?.split(' ')[0] ?? '—'
     s = rows[0]
   } catch (err) {
     console.error('[confirmacao/pdf] erro DB:', err)
